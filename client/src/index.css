@@ -3,9 +3,13 @@
 /* Load color tokens from tailwind.config.js — edit colors there to retheme the app */
 @config "../tailwind.config.js";
 
+/* Old Standard TT for all headings */
+h1, h2, h3, h4 {
+  font-family: 'Old Standard TT', serif;
+}
+
 :root {
   color: var(--color-pb-ink);
-  background-color: var(--color-pb-sand);
   font-family:
     Inter,
     ui-sans-serif,
@@ -23,8 +27,12 @@ html {
 body {
   margin: 0;
   min-width: 320px;
-  background: var(--color-pb-sand);
   color: var(--color-pb-ink);
+  background-color: var(--color-pb-sand);
+  background-image: url('./assets/pb-sunset.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
 }
 
 * {
@@ -44,7 +52,7 @@ img {
 }
 
 .surface-card {
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.82);
   border: 1px solid color-mix(in srgb, var(--color-pb-driftwood) 18%, transparent);
   border-radius: 1.25rem;
   box-shadow: 0 18px 38px color-mix(in srgb, var(--color-pb-ocean) 8%, transparent);

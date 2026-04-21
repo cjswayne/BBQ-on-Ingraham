@@ -15,9 +15,8 @@ const About = () => {
           you are heading downstairs.
         </p>
         <p className="text-base leading-7 text-pb-ink">
-          Residents can RSVP with a phone-based login, while guests can still add
-          themselves quickly without creating an account. Admins get a planning
-          dashboard so they can check headcount, monitor food coverage, and set
+          Anyone can RSVP in seconds without creating an account. Admins get a
+          planning dashboard to check headcount, monitor food coverage, and set
           the theme for the night.
         </p>
       </section>
@@ -33,9 +32,8 @@ const About = () => {
         <div>
           <h2 className="text-lg font-semibold text-pb-ocean">Friendly defaults</h2>
           <p className="mt-2 text-sm leading-6 text-pb-ink">
-            The next Monday is preselected, the RSVP list is visible immediately,
-            and repeat attendees get their saved name and photo back
-            automatically after login.
+            The next Monday is always preselected and the RSVP list is visible
+            the moment you arrive.
           </p>
         </div>
       </section>

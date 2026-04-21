@@ -14,9 +14,6 @@ export const Footer = () => {
           />
           <span className="text-sm font-semibold">BBQ On Ingraham</span>
         </Link>
-        <p className="text-xs text-white/60">
-          Your building's Monday cookout — keep it simple.
-        </p>
       </div>
     </footer>
   );

@@ -15,15 +15,14 @@ const themePollOptionSchema = new Schema(
       required: true,
       trim: true
     },
-    votes: {
-      type: [Schema.Types.ObjectId],
-      ref: "User",
-      default: []
+    voteCount: {
+      type: Number,
+      default: 0
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      default: null
     }
   },
   {

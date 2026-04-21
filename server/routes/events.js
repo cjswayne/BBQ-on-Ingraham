@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 
 import { requireAdmin } from "../middleware/adminAuth.js";
-import { requireAuth } from "../middleware/auth.js";
+import { optionalAuth, requireAuth } from "../middleware/auth.js";
 import { validateRequest } from "../middleware/validate.js";
 import { Event } from "../models/Event.js";
 import { RSVP } from "../models/RSVP.js";
@@ -79,8 +79,7 @@ const serializeEventPayload = async (event) => {
     pollOptions: pollOptions.map((option) => ({
       id: option._id.toString(),
       suggestion: option.suggestion,
-      voteCount: option.votes.length,
-      votes: option.votes.map((voteId) => voteId.toString())
+      voteCount: option.voteCount
     }))
   };
 };
@@ -135,7 +134,7 @@ router.put(
 
 router.post(
   "/:id/poll",
-  requireAuth,
+  optionalAuth,
   validateRequest(suggestionSchema),
   async (request, response, next) => {
     try {
@@ -149,14 +148,14 @@ router.post(
       const option = await ThemePollOption.create({
         eventId: event._id,
         suggestion: request.body.suggestion,
-        createdBy: request.user.userId
+        createdBy: request.user?.userId || null
       });
 
       response.status(201).json({
         option: {
           id: option._id.toString(),
           suggestion: option.suggestion,
-          voteCount: option.votes.length
+          voteCount: option.voteCount
         }
       });
     } catch (error) {
@@ -168,38 +167,24 @@ router.post(
 
 router.post(
   "/:id/poll/:optionId/vote",
-  requireAuth,
   validateRequest(voteSchema),
   async (request, response, next) => {
     try {
-      const option = await ThemePollOption.findOne({
-        _id: request.params.optionId,
-        eventId: request.params.id
-      });
+      const option = await ThemePollOption.findOneAndUpdate(
+        { _id: request.params.optionId, eventId: request.params.id },
+        { $inc: { voteCount: 1 } },
+        { returnDocument: "after" }
+      );
 
       if (!option) {
         next(createHttpError(404, "Poll option not found"));
         return;
       }
 
-      const userId = request.user.userId;
-      const existingVoteIndex = option.votes.findIndex(
-        (voteId) => voteId.toString() === userId
-      );
-
-      if (existingVoteIndex >= 0) {
-        option.votes.splice(existingVoteIndex, 1);
-      } else {
-        option.votes.push(userId);
-      }
-
-      await option.save();
-
       response.status(200).json({
         option: {
           id: option._id.toString(),
-          voteCount: option.votes.length,
-          voted: existingVoteIndex < 0
+          voteCount: option.voteCount
         }
       });
     } catch (error) {

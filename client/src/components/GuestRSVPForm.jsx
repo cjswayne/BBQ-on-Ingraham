@@ -46,14 +46,11 @@ export const GuestRSVPForm = ({ onSubmit }) => {
   };
 
   return (
-    <form className="surface-card space-y-4 p-5" onSubmit={handleSubmit}>
+    <form id="rsvp" className="surface-card space-y-4 p-5" onSubmit={handleSubmit}>
       <div>
         <h2 className="text-lg font-semibold text-pb-ocean">
-          RSVP without logging in
+          RSVP
         </h2>
-        <p className="mt-1 text-sm text-pb-driftwood">
-          Quick guest mode. Guest RSVPs cannot be edited or canceled later.
-        </p>
       </div>
 
       <div className="space-y-2">
@@ -70,7 +67,7 @@ export const GuestRSVPForm = ({ onSubmit }) => {
         />
       </div>
 
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <label className="block text-sm font-medium" htmlFor="guest-date">
           Event date
         </label>
@@ -82,7 +79,7 @@ export const GuestRSVPForm = ({ onSubmit }) => {
           type="date"
           value={formState.eventDate}
         />
-      </div>
+      </div> */}
 
       <div className="space-y-2">
         <label className="block text-sm font-medium" htmlFor="guest-food">
@@ -98,7 +95,7 @@ export const GuestRSVPForm = ({ onSubmit }) => {
         />
       </div>
 
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <label className="block text-sm font-medium" htmlFor="guest-count">
           Number of people
         </label>
@@ -110,7 +107,7 @@ export const GuestRSVPForm = ({ onSubmit }) => {
           type="number"
           value={formState.guestCount}
         />
-      </div>
+      </div> */}
 
       {errorMessage ? (
         <p className="text-sm text-pb-error">{errorMessage}</p>
@@ -121,7 +118,7 @@ export const GuestRSVPForm = ({ onSubmit }) => {
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting ? "Saving guest RSVP..." : "Submit guest RSVP"}
+        {isSubmitting ? "RSVP-ing..." : "RSVP"}
       </button>
     </form>
   );
