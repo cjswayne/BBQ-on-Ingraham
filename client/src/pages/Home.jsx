@@ -58,7 +58,19 @@ const Home = () => {
             BBQ On Ingraham
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-normal leading-6 text-white/90 sm:text-base">
-            Feast on delicious food and fantastic company
+            Feast on delicious food and fantastic company, every monday @ 7pm.
+          </p>
+          <p className="mt-3 max-w-2xl text-sm font-normal leading-6 text-white/90 sm:text-base">
+            4262 Ingraham St, San Diego, CA 92109
+            {" "}
+            <a
+              href="https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-white transition-colors"
+            >
+              Get Directions
+            </a>
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <a
