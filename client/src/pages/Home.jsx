@@ -58,7 +58,7 @@ const Home = () => {
             BBQ On Ingraham
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-normal leading-6 text-white/90 sm:text-base">
-            Feast on delicious food and fantastic company, every monday @ 7pm.
+            Feast on delicious food and fantastic company, every monday @ 7-10pm.
           </p>
           <p className="mt-3 max-w-2xl text-sm font-normal leading-6 text-white/90 sm:text-base">
             4262 Ingraham St, San Diego, CA 92109
