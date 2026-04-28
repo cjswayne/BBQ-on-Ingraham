@@ -48,10 +48,27 @@ export const getClosestMondayInputValue = (date = new Date()) => {
   return `${year}-${month}-${day}`;
 };
 
+// Returns a "YYYY-MM-DD" string for the given date in Pacific time
+const getPacificDateString = (date = new Date()) => {
+  const parts = extractPacificParts(date);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+};
+
 export const formatEventDateLabel = (dateValue) => {
   if (!dateValue) {
     return "Upcoming Monday";
   }
+
+  const eventDate = new Date(dateValue);
+  const eventDateString = getPacificDateString(eventDate);
+  const todayString = getPacificDateString();
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowString = getPacificDateString(tomorrow);
+
+  if (eventDateString === todayString) return "Today";
+  if (eventDateString === tomorrowString) return "Tomorrow";
 
   return new Intl.DateTimeFormat("en-US", {
     timeZone: PACIFIC_TIME_ZONE,
@@ -59,5 +76,5 @@ export const formatEventDateLabel = (dateValue) => {
     month: "long",
     day: "numeric",
     year: "numeric"
-  }).format(new Date(dateValue));
+  }).format(eventDate);
 };

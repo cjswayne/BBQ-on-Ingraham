@@ -1,12 +1,15 @@
 // Deterministic color from name so the same person always gets the same avatar color
 const AVATAR_COLORS = [
-  "#5A5F63", // ocean
-  "#5E7F57", // palm
-  "#D1492E", // coral
-  "#5F4C83", // grape
-  "#7A4E2D", // driftwood
-  "#8C2F1C", // neon
-  "#8B8F7A", // seafoam
+  "#FF4136", // bright red
+  "#0074D9", // vivid blue
+  "#2ECC40", // bright green
+  "#FFDC00", // yellow
+  "#B10DC9", // intense purple
+  "#FF851B", // strong orange
+  "#111111", // black
+  "#F012BE", // magenta
+  "#39CCCC", // cyan
+  "#85144b", // deep maroon
 ];
 
 const getAvatarColor = (name = "") => {
@@ -39,7 +42,7 @@ export const RSVPCard = ({ rsvp }) => {
         <p className="truncate font-medium text-pb-ocean">
           {rsvp.attendeeName}
         </p>
-        <p className="truncate text-sm font-normal text-pb-ink">
+        <p className="text-sm font-normal text-pb-ink">
           Bringing <span className="font-medium">{rsvp.food}</span>
         </p>
       </div>

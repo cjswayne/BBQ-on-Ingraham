@@ -101,7 +101,7 @@ const Home = () => {
               People coming
             </h2>
             <p className="mt-2 text-lg font-medium text-pb-ocean">
-              {eventData?.rsvps?.length || 0} spots claimed
+              {eventData?.rsvps?.length || 0} cool neighbors attending
             </p>
           </div>
         </div>
