@@ -10,6 +10,7 @@ export const Footer = () => {
           <img
             alt="BBQ On Ingraham"
             className="h-7 w-auto object-contain"
+            loading="lazy"
             src={logo}
           />
           <span className="text-sm font-semibold">BBQ On Ingraham</span>

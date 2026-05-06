@@ -19,6 +19,14 @@ root.render(
   </StrictMode>
 );
 
+// Fade out the HTML skeleton now that React has painted the real UI
+const skeleton = document.getElementById("hero-skeleton");
+if (skeleton) {
+  skeleton.style.transition = "opacity 0.3s ease-out";
+  skeleton.style.opacity = "0";
+  skeleton.addEventListener("transitionend", () => skeleton.remove(), { once: true });
+}
+
 // Load non-critical body background after first paint
 requestAnimationFrame(() => {
   requestAnimationFrame(() => {

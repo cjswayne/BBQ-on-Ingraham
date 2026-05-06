@@ -92,6 +92,19 @@ export const VideoHero = ({ children }) => {
     }, FADE_DURATION_MS);
   };
 
+  // Attempt to play a video element with muted enforcement for iOS
+  const tryPlay = useCallback((el) => {
+    if (!el) return;
+    el.muted = true;
+    const attempt = () => {
+      const p = el.play();
+      if (p && typeof p.catch === "function") {
+        p.catch((err) => console.debug("Autoplay blocked:", err));
+      }
+    };
+    attempt();
+  }, []);
+
   // Kick off playback on mount (mobile only — video B starts during crossfade)
   useEffect(() => {
     if (!isMobile) return;
@@ -99,11 +112,7 @@ export const VideoHero = ({ children }) => {
     const a = videoARef.current;
     if (!a) return;
 
-    a.muted = true;
-    const playPromise = a.play();
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch((err) => console.debug("Video A autoplay blocked:", err));
-    }
+    tryPlay(a);
 
     if (a.readyState >= 2) {
       setIsReady(true);
@@ -115,23 +124,35 @@ export const VideoHero = ({ children }) => {
       a.addEventListener("canplay", onCanPlay);
       return () => a.removeEventListener("canplay", onCanPlay);
     }
-  }, [isMobile]);
+  }, [isMobile, tryPlay]);
 
-  // Poll the active video and start crossfade before it ends
+  // Crossfade trigger — polls near end-of-video AND listens for 'ended' as fallback
   useEffect(() => {
     if (!isMobile || !isReady) return;
 
+    const onEnded = () => {
+      if (!crossfadingRef.current) startCrossfade();
+    };
+
+    const getActive = () =>
+      activeKeyRef.current === "A" ? videoARef.current : videoBRef.current;
+
+    // Fallback: if polling misses the window, 'ended' catches it
+    const a = videoARef.current;
+    const b = videoBRef.current;
+    if (a) a.addEventListener("ended", onEnded);
+    if (b) b.addEventListener("ended", onEnded);
+
     pollIntervalRef.current = setInterval(() => {
       if (crossfadingRef.current) return;
-      const active = activeKeyRef.current === "A" ? videoARef.current : videoBRef.current;
+      const active = getActive();
       if (!active) return;
 
-      const duration = active.duration;
-      const current = active.currentTime;
+      const { duration, currentTime } = active;
       if (
         Number.isFinite(duration) &&
         duration > 0 &&
-        duration - current <= CROSSFADE_LEAD_S
+        duration - currentTime <= CROSSFADE_LEAD_S
       ) {
         startCrossfade();
       }
@@ -139,6 +160,8 @@ export const VideoHero = ({ children }) => {
 
     return () => {
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      if (a) a.removeEventListener("ended", onEnded);
+      if (b) b.removeEventListener("ended", onEnded);
     };
   }, [isMobile, isReady]);
 
@@ -214,7 +237,7 @@ export const VideoHero = ({ children }) => {
                 muted
                 loop={false}
                 playsInline
-                preload="none"
+                preload="metadata"
                 style={videoElementStyle}
               />
             </div>
@@ -232,7 +255,7 @@ export const VideoHero = ({ children }) => {
                 muted
                 loop={false}
                 playsInline
-                preload="none"
+                preload="metadata"
                 style={videoElementStyle}
               />
             </div>

@@ -1,3 +1,5 @@
+import logo from "../assets/bbqoningraham-logo.png";
+
 // Deterministic color from name so the same person always gets the same avatar color
 const AVATAR_COLORS = [
   "#FF4136", // bright red
@@ -30,11 +32,20 @@ export const RSVPCard = ({ isAdmin = false, onAdminDelete, rsvp }) => {
           src={rsvp.profilePhotoUrl}
         />
       ) : (
+        // isolation:isolate creates a stacking context so mix-blend-mode stays clipped inside the circle
         <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-semibold text-white"
-          style={{ backgroundColor: getAvatarColor(rsvp.attendeeName) }}
+          className="h-11 w-11 shrink-0 overflow-hidden rounded-full p-1.5"
+          style={{
+            backgroundColor: getAvatarColor(rsvp.attendeeName),
+            isolation: "isolate",
+          }}
         >
-          {rsvp.attendeeName?.slice(0, 1).toUpperCase() || "?"}
+          <img
+            alt=""
+            className="h-full w-full object-contain"
+            src={logo}
+            style={{ filter: "grayscale(1)", mixBlendMode: "luminosity" }}
+          />
         </div>
       )}
 

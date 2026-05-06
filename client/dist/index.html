@@ -12,23 +12,74 @@
     />
     <title>BBQ On Ingraham</title>
     <link rel="icon" type="image/x-icon" href="/assets/bbqoningraham-favicon-YQjsc-D9.ico" />
+
+    <!-- Non-render-blocking font loading (preload then swap to stylesheet) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+    <link
       href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
-    <script
-      defer
-      src="https://upload-widget.cloudinary.com/latest/global/all.js"
-      type="text/javascript"
-    ></script>
-    <script type="module" crossorigin src="/assets/index-nGNuSNqP.js"></script>
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+
+    <!-- Critical CSS inlined for instant hero paint -->
+    <style>
+      .hero-skel,.hero-skel *{box-sizing:border-box;margin:0}
+      .hero-skel{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center}
+      .hero-skel-bg{position:absolute;inset:0;background:linear-gradient(to bottom right,#5A5F63,#5E7F57)}
+      .hero-skel-content{position:relative;z-index:10;padding:2rem 1.5rem;text-align:center;color:#fff;font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center}
+      .hero-skel-content p{max-width:42rem}
+      .hero-skel-sub{font-size:.875rem;font-weight:500;text-transform:uppercase;letter-spacing:.18em;opacity:.8}
+      .hero-skel-h1{margin-top:.5rem;font-size:1.875rem;font-weight:600;font-family:'Old Standard TT',serif}
+      @media(min-width:640px){.hero-skel-h1{font-size:2.25rem}}
+      .hero-skel-desc{margin-top:.75rem;font-size:.875rem;line-height:1.5rem;opacity:.9}
+      .hero-skel-desc a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+      .hero-skel-actions{margin-top:1.25rem;display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center}
+      .hero-skel-actions a{border-radius:9999px;padding:.625rem 1rem;font-size:.875rem;font-weight:500;color:#fff;text-decoration:none}
+      .hero-skel-cta{background:#5E7F57}
+      .hero-skel-sec{border:1px solid rgba(255,255,255,.3)}
+    </style>
+    <script type="module" crossorigin src="/assets/index-C5oHf4FO.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-jpDsebLB.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-DbXvltM7.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-DkcMtZsD.css">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-Bhl11_bc.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D_MJTuge.css">
   </head>
   <body class="text-pb-driftwood">
+    <!-- Hero skeleton — lives OUTSIDE #root so React mount doesn't destroy it (preserves LCP) -->
+    <div id="hero-skeleton" class="hero-skel">
+      <div class="hero-skel-bg"></div>
+      <div class="hero-skel-content">
+        <p class="hero-skel-sub">Apartment cookout</p>
+        <h1 class="hero-skel-h1">BBQ On Ingraham</h1>
+        <p class="hero-skel-desc">
+          Feast on delicious food and fantastic company, every monday @ 7-10pm.
+        </p>
+        <p class="hero-skel-desc">
+          4262 Ingraham St, San Diego, CA 92109
+          <a
+            href="https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Get Directions</a>
+        </p>
+        <div class="hero-skel-actions">
+          <a class="hero-skel-cta" href="#rsvp">RSVP</a>
+          <a class="hero-skel-sec" href="#poll">Vote for this week's theme</a>
+        </div>
+      </div>
+    </div>
     <div id="root"></div>
   </body>
 </html>

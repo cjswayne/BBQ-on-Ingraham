@@ -53,31 +53,30 @@
     </style>
   </head>
   <body class="text-pb-driftwood">
-    <div id="root">
-      <!-- Hero skeleton — paints before any JS loads, replaced by React on mount -->
-      <div class="hero-skel">
-        <div class="hero-skel-bg"></div>
-        <div class="hero-skel-content">
-          <p class="hero-skel-sub">Apartment cookout</p>
-          <h1 class="hero-skel-h1">BBQ On Ingraham</h1>
-          <p class="hero-skel-desc">
-            Feast on delicious food and fantastic company, every monday @ 7-10pm.
-          </p>
-          <p class="hero-skel-desc">
-            4262 Ingraham St, San Diego, CA 92109
-            <a
-              href="https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109"
-              target="_blank"
-              rel="noopener noreferrer"
-            >Get Directions</a>
-          </p>
-          <div class="hero-skel-actions">
-            <a class="hero-skel-cta" href="#rsvp">RSVP</a>
-            <a class="hero-skel-sec" href="#poll">Vote for this week's theme</a>
-          </div>
+    <!-- Hero skeleton — lives OUTSIDE #root so React mount doesn't destroy it (preserves LCP) -->
+    <div id="hero-skeleton" class="hero-skel">
+      <div class="hero-skel-bg"></div>
+      <div class="hero-skel-content">
+        <p class="hero-skel-sub">Apartment cookout</p>
+        <h1 class="hero-skel-h1">BBQ On Ingraham</h1>
+        <p class="hero-skel-desc">
+          Feast on delicious food and fantastic company, every monday @ 7-10pm.
+        </p>
+        <p class="hero-skel-desc">
+          4262 Ingraham St, San Diego, CA 92109
+          <a
+            href="https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Get Directions</a>
+        </p>
+        <div class="hero-skel-actions">
+          <a class="hero-skel-cta" href="#rsvp">RSVP</a>
+          <a class="hero-skel-sec" href="#poll">Vote for this week's theme</a>
         </div>
       </div>
     </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
