@@ -25,6 +25,9 @@ const persistVote = (eventId, optionId) => {
 
 export const ThemePoll = ({
   eventId,
+  isAdmin = false,
+  onAdminDeleteOption,
+  onAdminSetTheme,
   onRefresh,
   options,
   theme
@@ -33,11 +36,19 @@ export const ThemePoll = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [votedOptions, setVotedOptions] = useState(new Set());
+  const [adminThemeInput, setAdminThemeInput] = useState("");
 
   // Sync voted state whenever the event changes
   useEffect(() => {
     setVotedOptions(loadVotedOptions(eventId));
   }, [eventId]);
+
+  const handleAdminSetTheme = async (event) => {
+    event.preventDefault();
+    if (!adminThemeInput.trim() || !onAdminSetTheme) return;
+    await onAdminSetTheme(adminThemeInput.trim());
+    setAdminThemeInput("");
+  };
 
   if (theme) {
     return (
@@ -46,6 +57,24 @@ export const ThemePoll = ({
           Theme of the night
         </p>
         <h2 className="text-2xl font-semibold text-pb-ocean">{theme}</h2>
+        {isAdmin && (
+          <form className="flex gap-2 pt-2" onSubmit={handleAdminSetTheme}>
+            <input
+              className="input-field flex-1"
+              onChange={(e) => setAdminThemeInput(e.target.value)}
+              placeholder="Change theme..."
+              type="text"
+              value={adminThemeInput}
+            />
+            <button
+              className="rounded-full bg-pb-palm px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              disabled={!adminThemeInput.trim()}
+              type="submit"
+            >
+              Set
+            </button>
+          </form>
+        )}
       </section>
     );
   }
@@ -111,20 +140,31 @@ export const ThemePoll = ({
                     {option.voteCount} vote{option.voteCount === 1 ? "" : "s"}
                   </p>
                 </div>
-                {hasVoted ? (
-                  <span className="rounded-full bg-pb-palm/15 px-3 py-2 text-sm font-medium text-pb-palm">
-                    Voted
-                  </span>
-                ) : (
-                  <button
-                    className="rounded-full border border-pb-ocean/20 px-3 py-2 text-sm font-medium text-pb-ocean transition hover:bg-pb-ocean/5 disabled:opacity-50"
-                    disabled={isSubmitting}
-                    onClick={() => voteForOption(option.id)}
-                    type="button"
-                  >
-                    Vote
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {hasVoted ? (
+                    <span className="rounded-full bg-pb-palm/15 px-3 py-2 text-sm font-medium text-pb-palm">
+                      Voted
+                    </span>
+                  ) : (
+                    <button
+                      className="rounded-full border border-pb-ocean/20 px-3 py-2 text-sm font-medium text-pb-ocean transition hover:bg-pb-ocean/5 disabled:opacity-50"
+                      disabled={isSubmitting}
+                      onClick={() => voteForOption(option.id)}
+                      type="button"
+                    >
+                      Vote
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <button
+                      className="rounded-full border border-pb-error/30 px-3 py-2 text-xs font-medium text-pb-error hover:bg-pb-error/5"
+                      onClick={() => onAdminDeleteOption(option.id)}
+                      type="button"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })
@@ -151,13 +191,39 @@ export const ThemePoll = ({
           <p className="text-sm text-pb-error">{errorMessage}</p>
         ) : null}
         <button
-          className="rounded-full bg-pb-palm px-4 py-3 text-sm font-semibold text-white transition hover:brightness-105 disabled:opacity-60"
+          className="rounded-full bg-pb-palm px-4 py-3 text-sm font-semibold text-white transition"
           disabled={isSubmitting || !suggestion.trim()}
           type="submit"
         >
           Add suggestion
         </button>
       </form>
+
+      {/* Admin: set theme directly */}
+      {isAdmin && (
+        <form className="space-y-3 border-t border-pb-driftwood/10 pt-4" onSubmit={handleAdminSetTheme}>
+          <label className="block text-sm font-medium" htmlFor="admin-set-theme">
+            Set theme (admin)
+          </label>
+          <div className="flex gap-2">
+            <input
+              className="input-field flex-1"
+              id="admin-set-theme"
+              onChange={(e) => setAdminThemeInput(e.target.value)}
+              placeholder="Pick the winning theme..."
+              type="text"
+              value={adminThemeInput}
+            />
+            <button
+              className="rounded-full bg-pb-palm px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              disabled={!adminThemeInput.trim()}
+              type="submit"
+            >
+              Set theme
+            </button>
+          </div>
+        </form>
+      )}
     </section>
   );
 };

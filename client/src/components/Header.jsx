@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 
 import logo from "../assets/bbqoningraham-logo.png";
@@ -13,11 +13,35 @@ const navLinkClassName = ({ isActive }) => {
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        setIsScrolled(window.scrollY > 50);
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   const toggleMenu = () => setIsMenuOpen((v) => !v);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-black/5 bg-pb-ocean text-white shadow-sm">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 border-b text-white transition-all duration-300 ${
+        isScrolled
+          ? "border-black/5 bg-pb-ocean shadow-sm"
+          : "border-transparent bg-transparent shadow-none"
+      }`}
+    >
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4">
         <Link className="flex items-center gap-2" to="/">
           <img

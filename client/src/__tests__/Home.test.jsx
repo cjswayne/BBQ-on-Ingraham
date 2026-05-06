@@ -2,7 +2,23 @@
 
 import "@testing-library/jest-dom/vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+// jsdom doesn't implement matchMedia
+beforeAll(() => {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
+  });
+});
 
 const getNextEvent = vi.fn();
 
@@ -13,7 +29,16 @@ vi.mock("../api/client.js", () => {
       createRsvp: vi.fn(),
       cancelRsvp: vi.fn(),
       addPollSuggestion: vi.fn(),
-      togglePollVote: vi.fn()
+      togglePollVote: vi.fn(),
+      adminCancelRsvp: vi.fn(),
+      adminDeletePollOption: vi.fn(),
+      adminSetTheme: vi.fn(),
+      adminLogin: vi.fn()
+    },
+    adminSession: {
+      getToken: () => null,
+      setToken: vi.fn(),
+      clear: vi.fn()
     }
   };
 });
@@ -57,7 +82,11 @@ describe("Home page", () => {
       pollOptions: []
     });
 
-    render(<Home onOpenLogin={vi.fn()} />);
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Jamie")).toBeInTheDocument();

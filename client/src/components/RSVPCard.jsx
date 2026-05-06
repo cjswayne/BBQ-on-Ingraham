@@ -20,7 +20,7 @@ const getAvatarColor = (name = "") => {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 };
 
-export const RSVPCard = ({ rsvp }) => {
+export const RSVPCard = ({ isAdmin = false, onAdminDelete, rsvp }) => {
   return (
     <div className="flex items-center gap-4 px-5 py-4">
       {rsvp.profilePhotoUrl ? (
@@ -45,6 +45,11 @@ export const RSVPCard = ({ rsvp }) => {
         <p className="text-sm font-normal text-pb-ink">
           Bringing <span className="font-medium">{rsvp.food}</span>
         </p>
+        {isAdmin && rsvp.allergies ? (
+          <p className="text-xs text-pb-driftwood">
+            Allergies: {rsvp.allergies}
+          </p>
+        ) : null}
       </div>
 
       {rsvp.guestCount > 1 ? (
@@ -52,6 +57,16 @@ export const RSVPCard = ({ rsvp }) => {
           +{rsvp.guestCount - 1}
         </span>
       ) : null}
+
+      {isAdmin && (
+        <button
+          className="shrink-0 rounded-full border border-pb-error/30 px-3 py-1.5 text-xs font-medium text-pb-error hover:bg-pb-error/5"
+          onClick={onAdminDelete}
+          type="button"
+        >
+          Remove
+        </button>
+      )}
     </div>
   );
 };

@@ -24,6 +24,7 @@ const createRsvpSchema = z.object({
     eventDate: z.string().trim().regex(dateRegex).optional(),
     name: z.string().trim().min(1).optional(),
     food: z.string().trim().min(1, "Food is required"),
+    allergies: z.string().trim().optional().default(""),
     guestCount: z.coerce.number().int().min(1),
     profilePhotoUrl: z.string().trim().url().optional().or(z.literal(""))
   }),
@@ -151,6 +152,7 @@ router.post(
             userId: user._id,
             guestName: "",
             food: request.body.food,
+            allergies: request.body.allergies || "",
             guestCount: request.body.guestCount,
             isGuest: false,
             cancelledAt: null
@@ -166,6 +168,7 @@ router.post(
           eventId: event._id,
           guestName: attendeeName,
           food: request.body.food,
+          allergies: request.body.allergies || "",
           guestCount: request.body.guestCount,
           isGuest: true
         });
@@ -198,6 +201,7 @@ router.post(
           eventId: event._id.toString(),
           attendeeName,
           food: rsvp.food,
+          allergies: rsvp.allergies || "",
           guestCount: rsvp.guestCount,
           isGuest: rsvp.isGuest,
           profilePhotoUrl: user?.profilePhotoUrl || profilePhotoUrl

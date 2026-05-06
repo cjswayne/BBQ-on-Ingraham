@@ -2,12 +2,16 @@ import { useState } from "react";
 
 import { getClosestMondayInputValue } from "../utils/date.js";
 
+const FOOD_CATEGORIES = ["Meat", "Side", "Beer"];
+
 export const GuestRSVPForm = ({ onSubmit }) => {
   const [formState, setFormState] = useState({
     eventDate: getClosestMondayInputValue(),
     name: "",
-    food: "",
-    guestCount: 1
+    foodCategory: "",
+    foodCustom: "",
+    guestCount: 1,
+    allergies: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -19,26 +23,56 @@ export const GuestRSVPForm = ({ onSubmit }) => {
     }));
   };
 
+  const handleCategorySelect = (category) => {
+    setFormState((currentValue) => ({
+      ...currentValue,
+      foodCategory: currentValue.foodCategory === category ? "" : category,
+      foodCustom: ""
+    }));
+  };
+
+  // Resolve the final food value from category + custom text
+  const resolveFood = () => {
+    if (formState.foodCategory) return formState.foodCategory;
+    return formState.foodCustom.trim();
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
     setErrorMessage("");
 
+    const food = resolveFood();
+    if (!food) {
+      setErrorMessage("Please select a category or describe what you are bringing.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      await onSubmit({
+      const body = {
         eventDate: formState.eventDate,
         name: formState.name,
-        food: formState.food,
+        food,
         guestCount: Number(formState.guestCount)
-      });
+      };
+
+      if (formState.allergies.trim()) {
+        body.allergies = formState.allergies.trim();
+      }
+
+      await onSubmit(body);
 
       setFormState({
         eventDate: getClosestMondayInputValue(),
         name: "",
-        food: "",
-        guestCount: 1
+        foodCategory: "",
+        foodCustom: "",
+        guestCount: 1,
+        allergies: ""
       });
     } catch (error) {
+      console.error("RSVP submission failed", error);
       setErrorMessage(error.message || "Unable to save your guest RSVP");
     } finally {
       setIsSubmitting(false);
@@ -62,59 +96,66 @@ export const GuestRSVPForm = ({ onSubmit }) => {
           id="guest-name"
           onChange={(event) => setFieldValue("name", event.target.value)}
           placeholder="Your name"
+          required
           type="text"
           value={formState.name}
         />
       </div>
 
-      {/* <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="guest-date">
-          Event date
-        </label>
-        <input
-          className="input-field"
-          id="guest-date"
-          min={getClosestMondayInputValue()}
-          onChange={(event) => setFieldValue("eventDate", event.target.value)}
-          type="date"
-          value={formState.eventDate}
-        />
-      </div> */}
-
+      {/* Food category selector */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="guest-food">
-          Food you are bringing
-        </label>
-        <input
-          className="input-field"
-          id="guest-food"
-          onChange={(event) => setFieldValue("food", event.target.value)}
-          placeholder="Drinks, dessert, salad..."
-          type="text"
-          value={formState.food}
-        />
+        <span className="block text-sm font-medium">
+          What are you bringing?
+        </span>
+        <div className="flex flex-wrap gap-2">
+          {FOOD_CATEGORIES.map((category) => (
+            <button
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                formState.foodCategory === category
+                  ? "bg-pb-palm text-white"
+                  : "border border-pb-driftwood/30 text-pb-ink hover:bg-pb-cream"
+              }`}
+              key={category}
+              onClick={() => handleCategorySelect(category)}
+              type="button"
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+        {/* Custom text input shown when no preset category is selected */}
+        {!formState.foodCategory && (
+          <input
+            className="input-field mt-2"
+            id="guest-food-custom"
+            onChange={(event) => setFieldValue("foodCustom", event.target.value)}
+            placeholder="Or describe what you're bringing..."
+            type="text"
+            value={formState.foodCustom}
+          />
+        )}
       </div>
 
-      {/* <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="guest-count">
-          Number of people
+      <div className="space-y-2">
+        <label className="block text-sm font-medium" htmlFor="guest-allergies">
+          Allergies
         </label>
         <input
           className="input-field"
-          id="guest-count"
-          min="1"
-          onChange={(event) => setFieldValue("guestCount", event.target.value)}
-          type="number"
-          value={formState.guestCount}
+          id="guest-allergies"
+          onChange={(event) => setFieldValue("allergies", event.target.value)}
+          placeholder="Any food allergies? (optional)"
+          type="text"
+          value={formState.allergies}
         />
-      </div> */}
+      </div>
 
       {errorMessage ? (
         <p className="text-sm text-pb-error">{errorMessage}</p>
       ) : null}
 
       <button
-        className="w-full rounded-full bg-pb-seafoam px-4 py-3 text-sm font-semibold text-white transition hover:brightness-105 disabled:opacity-60"
+        className="w-full rounded-full bg-pb-seafoam px-4 py-3 text-sm font-semibold text-white transition"
         disabled={isSubmitting}
         type="submit"
       >

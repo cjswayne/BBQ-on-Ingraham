@@ -73,6 +73,7 @@ const serializeEventPayload = async (event) => {
       phone: rsvp.userId?.phone || "",
       profilePhotoUrl: rsvp.userId?.profilePhotoUrl || "",
       food: rsvp.food,
+      allergies: rsvp.allergies || "",
       guestCount: rsvp.guestCount,
       isGuest: rsvp.isGuest
     })),

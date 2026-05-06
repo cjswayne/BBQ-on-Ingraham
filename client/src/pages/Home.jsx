@@ -1,15 +1,59 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { apiClient } from "../api/client.js";
+import AdminPasswordGate from "../components/AdminPasswordGate.jsx";
 import { GuestRSVPForm } from "../components/GuestRSVPForm.jsx";
 import { RSVPCard } from "../components/RSVPCard.jsx";
 import { ThemePoll } from "../components/ThemePoll.jsx";
+import { VideoHero } from "../components/VideoHero.jsx";
+import { useAdminMode } from "../hooks/useAdminMode.js";
 import { formatEventDateLabel } from "../utils/date.js";
+
+// Hero text overlay content — uses inherited color from VideoHero scroll transition
+const HeroContent = () => (
+  <>
+    <p className="text-sm font-medium uppercase tracking-[0.18em] opacity-80">
+      Apartment cookout
+    </p>
+    <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
+      BBQ On Ingraham
+    </h1>
+    <p className="mt-3 max-w-2xl text-sm font-normal leading-6 opacity-90 sm:text-base">
+      Feast on delicious food and fantastic company, every monday @ 7-10pm.
+    </p>
+    <p className="mt-3 max-w-2xl text-sm font-normal leading-6 opacity-90 sm:text-base">
+      4262 Ingraham St, San Diego, CA 92109{" "}
+      <a
+        href="https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2 transition-opacity hover:opacity-100"
+      >
+        Get Directions
+      </a>
+    </p>
+    <div className="mt-5 flex flex-wrap gap-2">
+      <a
+        className="rounded-full bg-pb-palm px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-105"
+        href="#rsvp"
+      >
+        RSVP
+      </a>
+      <a
+        className="rounded-full border border-current/30 px-4 py-2.5 text-sm font-medium transition hover:opacity-80"
+        href="#poll"
+      >
+        Vote for this week&apos;s theme
+      </a>
+    </div>
+  </>
+);
 
 const Home = () => {
   const [eventData, setEventData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const adminMode = useAdminMode();
 
   const loadEvent = useCallback(async () => {
     setIsLoading(true);
@@ -19,6 +63,7 @@ const Home = () => {
       const response = await apiClient.getNextEvent();
       setEventData(response);
     } catch (error) {
+      console.error("Failed to load event", error);
       setErrorMessage(error.message || "Unable to load the RSVP list");
     } finally {
       setIsLoading(false);
@@ -47,112 +92,142 @@ const Home = () => {
     await loadEvent();
   };
 
+  const handleAdminDeleteRsvp = async (rsvpId) => {
+    try {
+      await apiClient.adminCancelRsvp(rsvpId);
+      await loadEvent();
+    } catch (error) {
+      console.error("Admin failed to cancel RSVP", error);
+    }
+  };
+
+  const handleAdminDeletePollOption = async (optionId) => {
+    try {
+      await apiClient.adminDeletePollOption(optionId);
+      await loadEvent();
+    } catch (error) {
+      console.error("Admin failed to delete poll option", error);
+    }
+  };
+
+  const handleAdminSetTheme = async (theme) => {
+    try {
+      await apiClient.adminSetTheme(eventData?.event?.id, theme);
+      await loadEvent();
+    } catch (error) {
+      console.error("Admin failed to set theme", error);
+    }
+  };
+
+  // If admin mode is active but not yet authenticated, show the password gate
+  if (adminMode.isAdmin && !adminMode.isAuthenticated) {
+    return (
+      <>
+        <VideoHero>
+          <HeroContent />
+        </VideoHero>
+        <div className="relative z-10 mx-auto max-w-md px-4 py-10">
+          <AdminPasswordGate onAuthenticated={adminMode.handleAuthenticated} />
+        </div>
+      </>
+    );
+  }
+
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
-      <section className="surface-card overflow-hidden">
-        <div className="bg-pb-ocean px-5 py-8 text-white sm:px-8">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-white/80">
-            Apartment cookout
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
-            BBQ On Ingraham
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm font-normal leading-6 text-white/90 sm:text-base">
-            Feast on delicious food and fantastic company, every monday @ 7-10pm.
-          </p>
-          <p className="mt-3 max-w-2xl text-sm font-normal leading-6 text-white/90 sm:text-base">
-            4262 Ingraham St, San Diego, CA 92109
-            {" "}
-            <a
-              href="https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-white transition-colors"
-            >
-              Get Directions
-            </a>
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <a
-              className="rounded-full bg-pb-palm px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-105"
-              href="#rsvp"
-            >
-              RSVP
-            </a>
-            <a
-              className="rounded-full border border-white/30 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
-              href="#poll"
-            >
-              Vote for this week&apos;s theme
-            </a>
+    <>
+      <VideoHero>
+        <HeroContent />
+      </VideoHero>
+
+      <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
+        {adminMode.isAuthenticated && (
+          <div className="rounded-lg border border-pb-palm/30 bg-pb-palm/5 px-4 py-3 text-sm text-pb-palm">
+            Admin mode active — you can manage RSVPs, poll options, and set the theme.
           </div>
-        </div>
-        <div className="grid gap-4 px-5 py-5 sm:grid-cols-2 sm:px-8">
-          <div>
-            <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-pb-driftwood">
-              Next event
-            </h2>
-            <p className="mt-2 text-lg font-medium text-pb-ocean">
-              {formatEventDateLabel(eventData?.event?.date)}
-            </p>
+        )}
+
+        {/* Hero info rendered as a standard surface-card in the content flow */}
+        <section className="surface-card overflow-hidden text-center">
+          <div className="px-6 py-8 sm:px-10 sm:py-10">
+            <HeroContent />
           </div>
-          <div>
-            <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-pb-driftwood">
-              People coming
-            </h2>
-            <p className="mt-2 text-lg font-medium text-pb-ocean">
-              {eventData?.rsvps?.length || 0} cool neighbors attending
-            </p>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <ThemePoll
-        eventId={eventData?.event?.id}
-        onRefresh={handleThemeRefresh}
-        options={eventData?.pollOptions || []}
-        theme={eventData?.event?.theme}
-      />
-
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="surface-card overflow-hidden">
-          <div className="border-b border-pb-driftwood/10 px-5 py-4">
-            <h2 className="text-xl font-semibold text-pb-ocean">
-              Who is coming
-            </h2>
-          </div>
-
-          {isLoading ? (
-            <p className="px-5 py-4 text-sm text-pb-driftwood">
-              Loading RSVP list...
-            </p>
-          ) : null}
-
-          {errorMessage ? (
-            <p className="px-5 py-4 text-sm text-pb-error">{errorMessage}</p>
-          ) : null}
-
-          {!isLoading && !errorMessage && !(eventData?.rsvps?.length > 0) ? (
-            <p className="px-5 py-4 text-sm text-pb-driftwood">
-              No one has RSVP'd yet. You can be the first.
-            </p>
-          ) : null}
-
-          {eventData?.rsvps?.map((rsvp, index) => (
-            <div
-              className={index > 0 ? "border-t border-pb-driftwood/10" : ""}
-              key={rsvp.id}
-            >
-              <RSVPCard rsvp={rsvp} />
+        <section className="surface-card overflow-hidden">
+          <div className="grid gap-4 px-5 py-5 sm:grid-cols-2 sm:px-8">
+            <div>
+              <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-pb-driftwood">
+                Next event
+              </h2>
+              <p className="mt-2 text-lg font-medium text-pb-ocean">
+                {formatEventDateLabel(eventData?.event?.date)}
+              </p>
             </div>
-          ))}
-        </div>
+            <div>
+              <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-pb-driftwood">
+                People coming
+              </h2>
+              <p className="mt-2 text-lg font-medium text-pb-ocean">
+                {eventData?.rsvps?.length || 0} cool neighbors attending
+              </p>
+            </div>
+          </div>
+        </section>
 
-        <div className="space-y-4">
-          <GuestRSVPForm onSubmit={handleSubmit} />
-        </div>
-      </section>
-    </main>
+        <ThemePoll
+          eventId={eventData?.event?.id}
+          isAdmin={adminMode.isAuthenticated}
+          onAdminDeleteOption={handleAdminDeletePollOption}
+          onAdminSetTheme={handleAdminSetTheme}
+          onRefresh={handleThemeRefresh}
+          options={eventData?.pollOptions || []}
+          theme={eventData?.event?.theme}
+        />
+
+        <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="surface-card overflow-hidden">
+            <div className="border-b border-pb-driftwood/10 px-5 py-4">
+              <h2 className="text-xl font-semibold text-pb-ocean">
+                Who is coming
+              </h2>
+            </div>
+
+            {isLoading ? (
+              <p className="px-5 py-4 text-sm text-pb-driftwood">
+                Loading RSVP list...
+              </p>
+            ) : null}
+
+            {errorMessage ? (
+              <p className="px-5 py-4 text-sm text-pb-error">{errorMessage}</p>
+            ) : null}
+
+            {!isLoading && !errorMessage && !(eventData?.rsvps?.length > 0) ? (
+              <p className="px-5 py-4 text-sm text-pb-driftwood">
+                No one has RSVP'd yet. You can be the first.
+              </p>
+            ) : null}
+
+            {eventData?.rsvps?.map((rsvp, index) => (
+              <div
+                className={index > 0 ? "border-t border-pb-driftwood/10" : ""}
+                key={rsvp.id}
+              >
+                <RSVPCard
+                  isAdmin={adminMode.isAuthenticated}
+                  onAdminDelete={() => handleAdminDeleteRsvp(rsvp.id)}
+                  rsvp={rsvp}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <GuestRSVPForm onSubmit={handleSubmit} />
+          </div>
+        </section>
+      </main>
+    </>
   );
 };
 

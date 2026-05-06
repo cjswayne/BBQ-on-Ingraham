@@ -72,3 +72,19 @@ img {
   outline: 2px solid color-mix(in srgb, var(--color-pb-ocean) 20%, transparent);
   border-color: var(--color-pb-ocean);
 }
+
+/* Hide YouTube play/pause button overlay and branding */
+.yt-hero-wrapper iframe {
+  pointer-events: none;
+}
+
+.ytp-large-play-button,
+.ytp-play-button,
+.ytp-pause-overlay,
+.ytp-chrome-top,
+.ytp-chrome-bottom,
+.ytp-watermark,
+.ytp-show-cards-title {
+  display: none !important;
+  opacity: 0 !important;
+}

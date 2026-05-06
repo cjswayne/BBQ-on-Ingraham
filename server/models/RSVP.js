@@ -25,6 +25,11 @@ const rsvpSchema = new Schema(
       required: true,
       trim: true
     },
+    allergies: {
+      type: String,
+      trim: true,
+      default: ""
+    },
     guestCount: {
       type: Number,
       required: true,

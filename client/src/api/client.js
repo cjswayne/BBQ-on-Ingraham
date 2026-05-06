@@ -52,6 +52,16 @@ const request = async (path, options = {}) => {
   return payload;
 };
 
+const ADMIN_TOKEN_KEY = "bbq-admin-token";
+
+const getAdminToken = () => sessionStorage.getItem(ADMIN_TOKEN_KEY);
+
+export const adminSession = {
+  getToken: getAdminToken,
+  setToken: (token) => sessionStorage.setItem(ADMIN_TOKEN_KEY, token),
+  clear: () => sessionStorage.removeItem(ADMIN_TOKEN_KEY)
+};
+
 export const apiClient = {
   sendOtp: (phone) => {
     return request("/api/auth/send-otp", {
@@ -101,5 +111,40 @@ export const apiClient = {
     request("/api/admin/settings", {
       method: "PUT",
       body
+    }),
+  adminLogin: (password) =>
+    request("/api/admin/login", {
+      method: "POST",
+      body: { password }
+    }),
+  adminCancelRsvp: (id) =>
+    request(`/api/admin/rsvps/${id}`, {
+      method: "DELETE",
+      token: getAdminToken()
+    }),
+  adminUpdateRsvp: (id, body) =>
+    request(`/api/admin/rsvps/${id}`, {
+      method: "PUT",
+      body,
+      token: getAdminToken()
+    }),
+  adminDeletePollOption: (optionId) =>
+    request(`/api/admin/poll-options/${optionId}`, {
+      method: "DELETE",
+      token: getAdminToken()
+    }),
+  adminSetTheme: (eventId, theme) =>
+    request(`/api/admin/events/${eventId}/theme`, {
+      method: "PUT",
+      body: { theme },
+      token: getAdminToken()
+    }),
+  adminGetStats: () =>
+    request("/api/admin/stats", { token: getAdminToken() }),
+  adminUpdateSettings: (body) =>
+    request("/api/admin/settings", {
+      method: "PUT",
+      body,
+      token: getAdminToken()
     })
 };

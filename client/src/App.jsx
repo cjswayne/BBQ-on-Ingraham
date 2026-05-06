@@ -1,13 +1,13 @@
 import { Suspense, lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
 import { Footer } from "./components/Footer.jsx";
 import { Header } from "./components/Header.jsx";
-import { useAuth } from "./context/AuthContext.jsx";
 import Home from "./pages/Home.jsx";
 
 const AboutPage = lazy(() => import("./pages/About.jsx"));
 const AdminPage = lazy(() => import("./pages/Admin.jsx"));
+const SharePage = lazy(() => import("./pages/Share.jsx"));
 
 const PageFallback = () => {
   return (
@@ -17,35 +17,21 @@ const PageFallback = () => {
   );
 };
 
-// Admin still requires a valid JWT; redirect silently to home if not present
-const AdminRoute = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <PageFallback />;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate replace to="/" />;
-  }
-
-  return <AdminPage />;
-};
-
 const App = () => {
   return (
-    <div className="min-h-screen text-pb-ink">
+    <div className="min-h-screen pt-16 text-pb-ink">
       <Header />
 
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/admin" element={<AdminRoute />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/share" element={<SharePage />} />
         </Routes>
       </Suspense>
 
-      {/* <Footer /> */}
+      <Footer />
     </div>
   );
 };

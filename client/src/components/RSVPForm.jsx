@@ -125,12 +125,13 @@ export const RSVPForm = ({
       ) : null}
 
       <button
-        className="w-full rounded-full bg-pb-coral px-4 py-3 text-sm font-semibold text-white transition hover:brightness-105 disabled:opacity-60"
+        className="w-full rounded-full bg-pb-coral px-4 py-3 text-sm font-semibold text-white transition"
         disabled={isSubmitting}
         type="submit"
       >
         {isSubmitting ? "Saving RSVP..." : existingRsvp ? "Update RSVP" : "RSVP"}
       </button>
     </form>
-  );
+  ); 
 };
+ 
