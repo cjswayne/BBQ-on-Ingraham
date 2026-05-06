@@ -1,5 +1,28 @@
 import { useMemo, useRef } from "react";
 
+const CLOUDINARY_WIDGET_URL =
+  "https://upload-widget.cloudinary.com/latest/global/all.js";
+
+// Lazily inject the Cloudinary widget script the first time it's needed
+const loadCloudinaryScript = () => {
+  if (window.cloudinary) return Promise.resolve();
+  if (window._cloudinaryLoading) return window._cloudinaryLoading;
+
+  window._cloudinaryLoading = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = CLOUDINARY_WIDGET_URL;
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = (err) => {
+      console.error("Failed to load Cloudinary widget:", err);
+      reject(err);
+    };
+    document.head.appendChild(script);
+  });
+
+  return window._cloudinaryLoading;
+};
+
 const getWidgetConfig = () => {
   return {
     cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "",
@@ -12,8 +35,15 @@ export const PhotoUpload = ({ onChange, value }) => {
   const config = useMemo(() => getWidgetConfig(), []);
   const isConfigured = Boolean(config.cloudName && config.uploadPreset);
 
-  const openWidget = () => {
+  const openWidget = async () => {
     if (!isConfigured) {
+      return;
+    }
+
+    try {
+      await loadCloudinaryScript();
+    } catch (err) {
+      console.error("Cloudinary script failed to load:", err);
       return;
     }
 

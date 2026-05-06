@@ -29,6 +29,10 @@ body {
   min-width: 320px;
   color: var(--color-pb-ink);
   background-color: var(--color-pb-sand);
+}
+
+/* Deferred background — loaded after first paint so 1MB image doesn't block LCP */
+body.bg-loaded {
   background-image: url('./assets/pb-sunset.jpg');
   background-size: cover;
   background-position: center top;

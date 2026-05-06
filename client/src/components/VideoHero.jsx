@@ -214,7 +214,7 @@ export const VideoHero = ({ children }) => {
                 muted
                 loop={false}
                 playsInline
-                preload="auto"
+                preload="none"
                 style={videoElementStyle}
               />
             </div>
@@ -232,7 +232,7 @@ export const VideoHero = ({ children }) => {
                 muted
                 loop={false}
                 playsInline
-                preload="auto"
+                preload="none"
                 style={videoElementStyle}
               />
             </div>

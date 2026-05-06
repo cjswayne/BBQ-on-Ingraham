@@ -18,3 +18,10 @@ root.render(
     </BrowserRouter>
   </StrictMode>
 );
+
+// Load non-critical body background after first paint
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    document.body.classList.add("bg-loaded");
+  });
+});
