@@ -120,6 +120,10 @@ export const RSVPForm = ({
         value={formState.profilePhotoUrl}
       />
 
+      {/beer/i.test(formState.food) ? (
+        <p className="text-xs text-pb-driftwood">* No glass allowed</p>
+      ) : null}
+
       {errorMessage ? (
         <p className="text-sm text-pb-error">{errorMessage}</p>
       ) : null}

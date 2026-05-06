@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import hero1 from "../assets/hero-1.mp4";
 import hero2 from "../assets/hero-2.mp4";
 
@@ -27,12 +27,22 @@ export const VideoHero = ({ children }) => {
   const pollIntervalRef = useRef(null);
 
   const [activePlayer, setActivePlayer] = useState("A");
-  const [videoOpacity, setVideoOpacity] = useState(1);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT
   );
   const [isReady, setIsReady] = useState(false);
+
+  // Ref callbacks force muted=true as a DOM property (React doesn't reliably set the attribute, which blocks iOS autoplay)
+  const setVideoA = useCallback((el) => {
+    videoARef.current = el;
+    if (el) el.muted = true;
+  }, []);
+
+  const setVideoB = useCallback((el) => {
+    videoBRef.current = el;
+    if (el) el.muted = true;
+  }, []);
 
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
@@ -52,13 +62,14 @@ export const VideoHero = ({ children }) => {
     crossfadingRef.current = true;
 
     try {
+      nextVideo.muted = true;
       nextVideo.currentTime = 0;
       const playPromise = nextVideo.play();
       if (playPromise && typeof playPromise.catch === "function") {
-        playPromise.catch(() => {});
+        playPromise.catch((err) => console.debug("Crossfade play blocked:", err));
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.debug("Crossfade play error:", err);
     }
 
     activeKeyRef.current = nextKey;
@@ -73,43 +84,36 @@ export const VideoHero = ({ children }) => {
           oldVideo.pause();
           oldVideo.src = VIDEO_SRCS[idx];
           oldVideo.load();
-        } catch {
-          // ignore
+        } catch (err) {
+          console.debug("Crossfade source swap error:", err);
         }
       }
       crossfadingRef.current = false;
     }, FADE_DURATION_MS);
   };
 
-  // Kick off playback on mount (mobile only)
+  // Kick off playback on mount (mobile only — video B starts during crossfade)
   useEffect(() => {
     if (!isMobile) return;
 
     const a = videoARef.current;
-    const b = videoBRef.current;
+    if (!a) return;
 
-    const startPlayback = (el) => {
-      if (!el) return;
-      const playPromise = el.play();
-      if (playPromise && typeof playPromise.catch === "function") {
-        playPromise.catch(() => {});
-      }
-    };
+    a.muted = true;
+    const playPromise = a.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch((err) => console.debug("Video A autoplay blocked:", err));
+    }
 
-    startPlayback(a);
-    startPlayback(b);
-
-    if (a) {
-      if (a.readyState >= 2) {
+    if (a.readyState >= 2) {
+      setIsReady(true);
+    } else {
+      const onCanPlay = () => {
         setIsReady(true);
-      } else {
-        const onCanPlay = () => {
-          setIsReady(true);
-          a.removeEventListener("canplay", onCanPlay);
-        };
-        a.addEventListener("canplay", onCanPlay);
-        return () => a.removeEventListener("canplay", onCanPlay);
-      }
+        a.removeEventListener("canplay", onCanPlay);
+      };
+      a.addEventListener("canplay", onCanPlay);
+      return () => a.removeEventListener("canplay", onCanPlay);
     }
   }, [isMobile]);
 
@@ -147,7 +151,6 @@ export const VideoHero = ({ children }) => {
         const scrollY = window.scrollY || window.pageYOffset;
         const fadeDistance = window.innerHeight * 0.4;
         const progress = Math.min(1, scrollY / fadeDistance);
-        setVideoOpacity(Math.max(0, 1 - progress));
         setScrollProgress(progress);
       });
     };
@@ -184,10 +187,17 @@ export const VideoHero = ({ children }) => {
           willChange: "opacity",
         }}
       >
+        {/* Base gradient — renders instantly on every device */}
+        <div className="absolute inset-0 bg-gradient-to-br from-pb-ocean to-pb-palm" />
+
+        {/* Video layer + dark overlay — fades in only after the video can actually play */}
         {isMobile && (
           <div
             className="absolute inset-0 overflow-hidden"
-            style={{ opacity: videoOpacity, willChange: "opacity" }}
+            style={{
+              opacity: isReady ? 1 : 0,
+              transition: "opacity 1s ease-in-out",
+            }}
           >
             <div
               className="absolute inset-0 overflow-hidden"
@@ -198,7 +208,7 @@ export const VideoHero = ({ children }) => {
               }}
             >
               <video
-                ref={videoARef}
+                ref={setVideoA}
                 src={VIDEO_SRCS[0]}
                 autoPlay
                 muted
@@ -217,9 +227,8 @@ export const VideoHero = ({ children }) => {
               }}
             >
               <video
-                ref={videoBRef}
+                ref={setVideoB}
                 src={VIDEO_SRCS[1 % VIDEO_SRCS.length]}
-                autoPlay
                 muted
                 loop={false}
                 playsInline
@@ -231,14 +240,7 @@ export const VideoHero = ({ children }) => {
           </div>
         )}
 
-        {(!isMobile || !isReady) && (
-          <div
-            className="absolute inset-0 bg-gradient-to-br from-pb-ocean to-pb-palm"
-            style={{ opacity: isMobile ? (isReady ? 0 : 1) : 1 }}
-          />
-        )}
-
-        {/* Centered hero text on the overlay */}
+        {/* Centered hero text — always visible on top */}
         <div className="relative z-10 flex h-full items-center justify-center px-2 text-center text-white">
           <div className="flex flex-col items-center px-6 py-8 sm:px-10 sm:py-10">
             {children}
