@@ -139,6 +139,12 @@ export const apiClient = {
       body: { theme },
       token: getAdminToken()
     }),
+  adminSetEventCancelled: (eventId, cancelled) =>
+    request(`/api/admin/events/${eventId}/cancelled`, {
+      method: "PUT",
+      body: { cancelled },
+      token: getAdminToken()
+    }),
   adminGetStats: () =>
     request("/api/admin/stats", { token: getAdminToken() }),
   adminUpdateSettings: (body) =>

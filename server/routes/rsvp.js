@@ -112,6 +112,12 @@ router.post(
     try {
       const eventDate = parseSelectedEventDate(request.body.eventDate);
       const event = await getOrCreateEvent(eventDate);
+
+      if (event.cancelled) {
+        next(createHttpError(400, "This event has been cancelled"));
+        return;
+      }
+
       const isGuest = !request.user;
       const profilePhotoUrl = request.body.profilePhotoUrl || "";
       let attendeeName = request.body.name || "";

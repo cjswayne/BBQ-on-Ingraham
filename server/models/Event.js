@@ -16,6 +16,10 @@ const eventSchema = new mongoose.Schema(
     themePollActive: {
       type: Boolean,
       default: true
+    },
+    cancelled: {
+      type: Boolean,
+      default: false
     }
   },
   {

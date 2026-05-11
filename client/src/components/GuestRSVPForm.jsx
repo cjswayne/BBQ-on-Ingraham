@@ -4,7 +4,7 @@ import { getClosestMondayInputValue } from "../utils/date.js";
 
 const FOOD_CATEGORIES = ["Meat", "Side", "Beer"];
 
-export const GuestRSVPForm = ({ onSubmit }) => {
+export const GuestRSVPForm = ({ cancelled = false, onSubmit }) => {
   const [formState, setFormState] = useState({
     eventDate: getClosestMondayInputValue(),
     name: "",
@@ -78,6 +78,15 @@ export const GuestRSVPForm = ({ onSubmit }) => {
       setIsSubmitting(false);
     }
   };
+
+  if (cancelled) {
+    return (
+      <div id="rsvp" className="surface-card space-y-2 p-5 opacity-60">
+        <h2 className="text-lg font-semibold text-pb-ocean">RSVP</h2>
+        <p className="text-sm text-pb-driftwood">RSVPs are closed — this event is not happening.</p>
+      </div>
+    );
+  }
 
   return (
     <form id="rsvp" className="surface-card space-y-4 p-5" onSubmit={handleSubmit}>

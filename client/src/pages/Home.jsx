@@ -19,7 +19,7 @@ const HeroContent = () => (
       BBQ On Ingraham
     </h1>
     <p className="mt-3 max-w-2xl text-sm font-normal leading-6 opacity-90 sm:text-base">
-      Feast on delicious food and fantastic company, every monday @ 7-10pm.
+      Feast on delicious food and fantastic company, every monday @ 8-11pm.
     </p>
     <p className="mt-3 max-w-2xl text-sm font-normal leading-6 opacity-90 sm:text-base">
       4262 Ingraham St, San Diego, CA 92109{" "}
@@ -119,6 +119,16 @@ const Home = () => {
     }
   };
 
+  const handleAdminToggleCancelled = async () => {
+    const next = !eventData?.event?.cancelled;
+    try {
+      await apiClient.adminSetEventCancelled(eventData?.event?.id, next);
+      await loadEvent();
+    } catch (error) {
+      console.error("Admin failed to toggle event cancelled status", error);
+    }
+  };
+
   // If admin mode is active but not yet authenticated, show the password gate
   if (adminMode.isAdmin && !adminMode.isAuthenticated) {
     return (
@@ -141,10 +151,22 @@ const Home = () => {
 
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
         {adminMode.isAuthenticated && (
-          <div className="rounded-lg border border-pb-palm/30 bg-pb-palm/5 px-4 py-3 text-sm text-pb-palm">
-            Admin mode active — you can manage RSVPs, poll options, and set the theme.
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-pb-palm/30 bg-pb-palm/5 px-4 py-3 text-sm text-pb-palm">
+            <span>Admin mode active — you can manage RSVPs, poll options, and set the theme.</span>
+            <button
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                eventData?.event?.cancelled
+                  ? "border-pb-palm/40 text-pb-palm hover:bg-pb-palm/10"
+                  : "border-pb-error/40 text-pb-error hover:bg-pb-error/5"
+              }`}
+              onClick={handleAdminToggleCancelled}
+              type="button"
+            >
+              {eventData?.event?.cancelled ? "Uncancel event" : "Cancel event"}
+            </button>
           </div>
         )}
+
 
         {/* Hero info rendered as a standard surface-card in the content flow */}
         <section className="surface-card overflow-hidden text-center">
@@ -152,6 +174,17 @@ const Home = () => {
             <HeroContent />
           </div>
         </section>
+        {eventData?.event?.cancelled && (
+          <section className="rounded-lg border border-pb-error/30 bg-pb-error/5 px-5 py-5 text-center">
+            <p className="text-sm font-medium uppercase tracking-[0.16em] text-pb-error">
+              Event Cancelled
+            </p>
+            <p className="mt-2 text-lg font-medium text-pb-ocean">
+              BBQ is not happening on {formatEventDateLabel(eventData?.event?.date)}
+            </p>
+            <p className="mt-1 text-sm text-pb-driftwood">Check back next week.</p>
+          </section>
+        )}
 
         <section className="surface-card overflow-hidden">
           <div className="grid gap-4 px-5 py-5 sm:grid-cols-2 sm:px-8">
@@ -175,6 +208,7 @@ const Home = () => {
         </section>
 
         <ThemePoll
+          cancelled={eventData?.event?.cancelled ?? false}
           eventId={eventData?.event?.id}
           isAdmin={adminMode.isAuthenticated}
           onAdminDeleteOption={handleAdminDeletePollOption}
@@ -223,7 +257,10 @@ const Home = () => {
           </div>
 
           <div className="space-y-4">
-            <GuestRSVPForm onSubmit={handleSubmit} />
+            <GuestRSVPForm
+              cancelled={eventData?.event?.cancelled ?? false}
+              onSubmit={handleSubmit}
+            />
           </div>
         </section>
       </main>

@@ -48,6 +48,16 @@ const themeSchema = z.object({
   query: z.object({}).optional()
 });
 
+const cancelledSchema = z.object({
+  body: z.object({
+    cancelled: z.boolean()
+  }),
+  params: z.object({
+    eventId: z.string().trim().min(1)
+  }),
+  query: z.object({}).optional()
+});
+
 const getOrCreateSettings = async () => {
   return AppSettings.findOneAndUpdate(
     { key: "global" },
@@ -245,6 +255,37 @@ router.delete("/poll-options/:id", requireAdminAccess, async (request, response,
     next(error);
   }
 });
+
+// Toggle event cancellation — disables RSVPs and shows a cancellation notice
+router.put(
+  "/events/:eventId/cancelled",
+  requireAdminAccess,
+  validateRequest(cancelledSchema),
+  async (request, response, next) => {
+    try {
+      const event = await Event.findByIdAndUpdate(
+        request.params.eventId,
+        { cancelled: request.body.cancelled },
+        { returnDocument: "after" }
+      );
+
+      if (!event) {
+        next(createHttpError(404, "Event not found"));
+        return;
+      }
+
+      response.status(200).json({
+        event: {
+          id: event._id.toString(),
+          cancelled: event.cancelled
+        }
+      });
+    } catch (error) {
+      logger.error("Admin failed to update event cancelled status", error);
+      next(error);
+    }
+  }
+);
 
 // Set the event theme — admin override (separate from the events router version)
 router.put(

@@ -65,7 +65,8 @@ const serializeEventPayload = async (event) => {
       id: event._id.toString(),
       date: event.date,
       theme: event.theme,
-      themePollActive: event.themePollActive
+      themePollActive: event.themePollActive,
+      cancelled: event.cancelled ?? false
     },
     rsvps: rsvps.map((rsvp) => ({
       id: rsvp._id.toString(),

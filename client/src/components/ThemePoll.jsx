@@ -24,6 +24,7 @@ const persistVote = (eventId, optionId) => {
 };
 
 export const ThemePoll = ({
+  cancelled = false,
   eventId,
   isAdmin = false,
   onAdminDeleteOption,
@@ -49,6 +50,17 @@ export const ThemePoll = ({
     await onAdminSetTheme(adminThemeInput.trim());
     setAdminThemeInput("");
   };
+
+  if (cancelled) {
+    return (
+      <section id="poll" className="surface-card space-y-3 p-5 opacity-60">
+        <p className="text-sm font-medium uppercase tracking-[0.18em] text-pb-driftwood">
+          Theme poll
+        </p>
+        <p className="text-sm text-pb-driftwood">Voting is closed — this event is not happening.</p>
+      </section>
+    );
+  }
 
   if (theme) {
     return (
