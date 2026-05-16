@@ -76,7 +76,7 @@ const HeroContent = () => {
       <p className="mt-3 max-w-2xl text-sm font-normal leading-6 opacity-90 sm:text-base">
         Cook on our Big Green Egg, enjoy delicious food and fantastic company, 1st and 3rd mondays of the month @ 8-11pm.
       </p>
-      <p className="mt-3 inline-flex max-w-2xl flex-wrap items-center gap-1.5 text-sm font-normal leading-6 opacity-90 sm:text-base">
+      <p className="mt-3 inline-flex max-w-2xl flex-wrap items-center justify-center gap-1.5 text-sm font-normal leading-6 opacity-90 sm:text-base">
         4262 Ingraham St, San Diego, CA 92109
         <button
           aria-label="View on map"
@@ -97,17 +97,24 @@ const HeroContent = () => {
           rel="noopener noreferrer"
           target="_blank"
         >
-          Get Directions
+          Get Directions 
         </a>
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <a
-          className="rounded-full bg-pb-palm px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-105"
-          href="#rsvp"
-        >
-          RSVP
-        </a>
+        {/* Ping ring pulses behind the button to draw attention */}
+        <span className="relative inline-flex">
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 animate-ping rounded-full bg-pb-palm opacity-40 [animation-duration:3s]"
+          />
+          <a
+            className="relative rounded-full bg-pb-palm px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-105 "
+            href="#rsvp"
+          >
+            RSVP
+          </a>
+        </span>
         <a
           className="rounded-full border border-current/30 px-4 py-2.5 text-sm font-medium transition hover:opacity-80"
           href="#poll"
