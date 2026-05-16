@@ -168,8 +168,8 @@ export const GuestRSVPForm = ({ cancelled = false, onSubmit }) => {
       ) : null}
 
       <button
-        className="w-full rounded-full bg-pb-seafoam px-4 py-3 text-sm font-semibold text-white transition"
-        disabled={isSubmitting}
+          className="rounded-full bg-pb-palm px-4 py-3 text-sm font-semibold text-white transition"
+          disabled={isSubmitting}
         type="submit"
       >
         {isSubmitting ? "RSVP-ing..." : "RSVP"}

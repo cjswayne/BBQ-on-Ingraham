@@ -32,19 +32,23 @@ export const RSVPCard = ({ isAdmin = false, onAdminDelete, rsvp }) => {
           src={rsvp.profilePhotoUrl}
         />
       ) : (
-        // isolation:isolate creates a stacking context so mix-blend-mode stays clipped inside the circle
+        // Grayscale image with a color overlay using mix-blend-mode:color to tint without a solid background
         <div
-          className="h-11 w-11 shrink-0 overflow-hidden rounded-full p-1.5"
-          style={{
-            backgroundColor: getAvatarColor(rsvp.attendeeName),
-            isolation: "isolate",
-          }}
+          className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full"
+          style={{ isolation: "isolate" }}
         >
           <img
             alt=""
-            className="h-full w-full object-contain"
-            src={logo}
-            style={{ filter: "grayscale(1)", mixBlendMode: "luminosity" }}
+            className="h-full w-full object-contain p-1.5"
+            src={logo} 
+            style={{ filter: "grayscale(1)" }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundColor: getAvatarColor(rsvp.attendeeName),
+              mixBlendMode: "color",
+            }}
           />
         </div>
       )}
