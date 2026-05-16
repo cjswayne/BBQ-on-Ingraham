@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { getClosestMondayInputValue } from "../utils/date.js";
 
-const FOOD_CATEGORIES = ["Meat", "Side", "Beer"];
+const FOOD_CATEGORIES = ["Meat", "Side", "Dessert"];
 
 export const GuestRSVPForm = ({ cancelled = false, onSubmit }) => {
   const [formState, setFormState] = useState({
@@ -43,19 +43,15 @@ export const GuestRSVPForm = ({ cancelled = false, onSubmit }) => {
     setErrorMessage("");
 
     const food = resolveFood();
-    if (!food) {
-      setErrorMessage("Please select a category or describe what you are bringing.");
-      setIsSubmitting(false);
-      return;
-    }
 
     try {
       const body = {
         eventDate: formState.eventDate,
         name: formState.name,
-        food,
         guestCount: Number(formState.guestCount)
       };
+
+      if (food) body.food = food;
 
       if (formState.allergies.trim()) {
         body.allergies = formState.allergies.trim();
@@ -101,8 +97,10 @@ export const GuestRSVPForm = ({ cancelled = false, onSubmit }) => {
           Name
         </label>
         <input
+          autoComplete="name"
           className="input-field"
           id="guest-name"
+          name="name"
           onChange={(event) => setFieldValue("name", event.target.value)}
           placeholder="Your name"
           required
@@ -159,9 +157,6 @@ export const GuestRSVPForm = ({ cancelled = false, onSubmit }) => {
         />
       </div>
 
-      {formState.foodCategory === "Beer" ? (
-        <p className="text-xs text-pb-driftwood">* No glass allowed</p>
-      ) : null}
 
       {errorMessage ? (
         <p className="text-sm text-pb-error">{errorMessage}</p>

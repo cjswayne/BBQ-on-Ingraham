@@ -9,45 +9,153 @@ import { VideoHero } from "../components/VideoHero.jsx";
 import { useAdminMode } from "../hooks/useAdminMode.js";
 import { formatEventDateLabel } from "../utils/date.js";
 
+const AVATAR_COLORS = [
+  "#FF4136",
+  "#0074D9",
+  "#2ECC40",
+  "#FFDC00",
+  "#B10DC9",
+  "#FF851B",
+  "#111111",
+  "#F012BE",
+  "#39CCCC",
+  "#85144b",
+];
+
+// Hash a name to an index into AVATAR_COLORS
+const hashNameToIndex = (name = "") => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % AVATAR_COLORS.length;
+};
+
+// Assign colors so no two adjacent RSVPs share the same color
+const assignAvatarColors = (rsvps = []) => {
+  const colors = [];
+  for (let i = 0; i < rsvps.length; i++) {
+    let idx = hashNameToIndex(rsvps[i].attendeeName);
+    // Shift forward until we find a color that differs from the previous
+    let attempts = 0;
+    while (attempts < AVATAR_COLORS.length && i > 0 && AVATAR_COLORS[idx] === colors[i - 1]) {
+      idx = (idx + 1) % AVATAR_COLORS.length;
+      attempts++;
+    }
+    colors.push(AVATAR_COLORS[idx]);
+  }
+  return colors;
+};
+
+// No API key required — uses the legacy embed format Google still supports
+// z controls zoom level — lower number = more zoomed out (15 = street, 13 = neighborhood)
+const MAP_EMBED_URL =
+  "https://maps.google.com/maps?q=4262+Ingraham+St,+San+Diego,+CA+92109&output=embed&z=14";
+
 // Hero text overlay content — uses inherited color from VideoHero scroll transition
-const HeroContent = () => (
-  <>
-    <p className="text-sm font-medium uppercase tracking-[0.18em] opacity-80">
-      Apartment cookout
-    </p>
-    <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
-      BBQ On Ingraham
-    </h1>
-    <p className="mt-3 max-w-2xl text-sm font-normal leading-6 opacity-90 sm:text-base">
-      Feast on delicious food and fantastic company, every monday @ 8-11pm.
-    </p>
-    <p className="mt-3 max-w-2xl text-sm font-normal leading-6 opacity-90 sm:text-base">
-      4262 Ingraham St, San Diego, CA 92109{" "}
-      <a
-        href="https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="underline underline-offset-2 transition-opacity hover:opacity-100"
-      >
-        Get Directions
-      </a>
-    </p>
-    <div className="mt-5 flex flex-wrap gap-2">
-      <a
-        className="rounded-full bg-pb-palm px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-105"
-        href="#rsvp"
-      >
-        RSVP
-      </a>
-      <a
-        className="rounded-full border border-current/30 px-4 py-2.5 text-sm font-medium transition hover:opacity-80"
-        href="#poll"
-      >
-        Vote for this week&apos;s theme
-      </a>
-    </div>
-  </>
-);
+const HeroContent = () => {
+  const [isMapOpen, setIsMapOpen] = useState(false);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setIsMapOpen(false);
+    };
+    if (isMapOpen) document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isMapOpen]);
+
+  return (
+    <>
+      <p className="text-sm font-medium uppercase tracking-[0.18em] opacity-80">
+        Apartment Potluck
+      </p>
+      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
+        BBQ On Ingraham
+      </h1>
+      <p className="mt-3 max-w-2xl text-sm font-normal leading-6 opacity-90 sm:text-base">
+        Cook on our Big Green Egg, enjoy delicious food and fantastic company, 1st and 3rd mondays of the month @ 8-11pm.
+      </p>
+      <p className="mt-3 inline-flex max-w-2xl flex-wrap items-center gap-1.5 text-sm font-normal leading-6 opacity-90 sm:text-base">
+        4262 Ingraham St, San Diego, CA 92109
+        <button
+          aria-label="View on map"
+          className="inline-flex items-center justify-center rounded-full opacity-70 transition hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-current"
+          onClick={() => setIsMapOpen(true)}
+          type="button"
+        >
+          {/* Question circle icon */}
+          <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="12" cy="17" fill="currentColor" r="0.5" stroke="none" />
+          </svg>
+        </button>
+        <a
+          className="underline underline-offset-2 transition-opacity hover:opacity-100"
+          href="https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Get Directions
+        </a>
+      </p>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        <a
+          className="rounded-full bg-pb-palm px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-105"
+          href="#rsvp"
+        >
+          RSVP
+        </a>
+        <a
+          className="rounded-full border border-current/30 px-4 py-2.5 text-sm font-medium transition hover:opacity-80"
+          href="#poll"
+        >
+          Vote for this week&apos;s theme
+        </a>
+      </div>
+
+      {/* Map modal — backdrop click closes, Escape key closes */}
+      {isMapOpen && (
+        <div
+          aria-label="Location map"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setIsMapOpen(false)}
+          role="dialog"
+        >
+          <div
+            className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3">
+              <p className="text-sm font-medium text-pb-ocean">4262 Ingraham St, San Diego, CA 92109</p>
+              <button
+                aria-label="Close map"
+                className="rounded-full p-1 text-pb-driftwood transition hover:bg-pb-sand/40"
+                onClick={() => setIsMapOpen(false)}
+                type="button"
+              >
+                <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <iframe
+              allowFullScreen
+              className="h-72 w-full border-0 sm:h-96"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              src={MAP_EMBED_URL}
+              title="BBQ On Ingraham location"
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 const Home = () => {
   const [eventData, setEventData] = useState(null);
@@ -242,18 +350,22 @@ const Home = () => {
               </p>
             ) : null}
 
-            {eventData?.rsvps?.map((rsvp, index) => (
-              <div
-                className={index > 0 ? "border-t border-pb-driftwood/10" : ""}
-                key={rsvp.id}
-              >
-                <RSVPCard
-                  isAdmin={adminMode.isAuthenticated}
-                  onAdminDelete={() => handleAdminDeleteRsvp(rsvp.id)}
-                  rsvp={rsvp}
-                />
-              </div>
-            ))}
+            {(() => {
+              const avatarColors = assignAvatarColors(eventData?.rsvps ?? []);
+              return eventData?.rsvps?.map((rsvp, index) => (
+                <div
+                  className={index > 0 ? "border-t border-pb-driftwood/10" : ""}
+                  key={rsvp.id}
+                >
+                  <RSVPCard
+                    avatarColor={avatarColors[index]}
+                    isAdmin={adminMode.isAuthenticated}
+                    onAdminDelete={() => handleAdminDeleteRsvp(rsvp.id)}
+                    rsvp={rsvp}
+                  />
+                </div>
+              ));
+            })()}
           </div>
 
           <div className="space-y-4">

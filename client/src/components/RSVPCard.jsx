@@ -1,28 +1,7 @@
 import logo from "../assets/bbqoningraham-logo.png";
 
-// Deterministic color from name so the same person always gets the same avatar color
-const AVATAR_COLORS = [
-  "#FF4136", // bright red
-  "#0074D9", // vivid blue
-  "#2ECC40", // bright green
-  "#FFDC00", // yellow
-  "#B10DC9", // intense purple
-  "#FF851B", // strong orange
-  "#111111", // black
-  "#F012BE", // magenta
-  "#39CCCC", // cyan
-  "#85144b", // deep maroon
-];
-
-const getAvatarColor = (name = "") => {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-};
-
-export const RSVPCard = ({ isAdmin = false, onAdminDelete, rsvp }) => {
+// avatarColor is passed from Home.jsx where adjacency is enforced
+export const RSVPCard = ({ avatarColor, isAdmin = false, onAdminDelete, rsvp }) => {
   return (
     <div className="flex items-center gap-4 px-5 py-4">
       {rsvp.profilePhotoUrl ? (
@@ -32,21 +11,20 @@ export const RSVPCard = ({ isAdmin = false, onAdminDelete, rsvp }) => {
           src={rsvp.profilePhotoUrl}
         />
       ) : (
-        // Grayscale image with a color overlay using mix-blend-mode:color to tint without a solid background
         <div
           className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full"
           style={{ isolation: "isolate" }}
         >
           <img
             alt=""
-            className="h-full w-full object-contain p-1.5"
-            src={logo} 
+            className="h-full w-full object-contain p-1"
+            src={logo}
             style={{ filter: "grayscale(1)" }}
           />
           <div
             className="absolute inset-0"
             style={{
-              backgroundColor: getAvatarColor(rsvp.attendeeName),
+              backgroundColor: avatarColor,
               mixBlendMode: "color",
             }}
           />

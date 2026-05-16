@@ -23,7 +23,7 @@ const createRsvpSchema = z.object({
   body: z.object({
     eventDate: z.string().trim().regex(dateRegex).optional(),
     name: z.string().trim().min(1).optional(),
-    food: z.string().trim().min(1, "Food is required"),
+    food: z.string().trim().optional().default(""),
     allergies: z.string().trim().optional().default(""),
     guestCount: z.coerce.number().int().min(1),
     profilePhotoUrl: z.string().trim().url().optional().or(z.literal(""))
@@ -34,7 +34,7 @@ const createRsvpSchema = z.object({
 
 const updateRsvpSchema = z.object({
   body: z.object({
-    food: z.string().trim().min(1, "Food is required"),
+    food: z.string().trim().optional().default(""),
     guestCount: z.coerce.number().int().min(1)
   }),
   params: z.object({
