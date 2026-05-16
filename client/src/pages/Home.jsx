@@ -50,7 +50,7 @@ const assignAvatarColors = (rsvps = []) => {
 // No API key required — uses the legacy embed format Google still supports
 // z controls zoom level — lower number = more zoomed out (15 = street, 13 = neighborhood)
 const MAP_EMBED_URL =
-  "https://maps.google.com/maps?q=4262+Ingraham+St,+San+Diego,+CA+92109&output=embed&z=14";
+  "https://maps.google.com/maps?q=4262+Ingraham+St,+San+Diego,+CA+92109&output=embed&z=13";
 
 // Hero text overlay content — uses inherited color from VideoHero scroll transition
 const HeroContent = () => {
