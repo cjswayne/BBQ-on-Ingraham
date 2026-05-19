@@ -93,4 +93,5 @@ const GalleryModal = ({ media, onClose }) => {
   );
 };
 
+export { GalleryModal };
 export default GalleryModal;
