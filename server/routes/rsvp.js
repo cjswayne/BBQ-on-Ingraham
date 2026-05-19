@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 
-import { optionalAuth, requireAuth } from "../middleware/auth.js";
+import { createJwtToken, optionalAuth, requireAuth } from "../middleware/auth.js";
 import { validateRequest } from "../middleware/validate.js";
 import { AppSettings } from "../models/AppSettings.js";
 import { Event } from "../models/Event.js";
@@ -23,10 +23,12 @@ const createRsvpSchema = z.object({
   body: z.object({
     eventDate: z.string().trim().regex(dateRegex).optional(),
     name: z.string().trim().min(1).optional(),
+    email: z.string().email().optional(),
     food: z.string().trim().optional().default(""),
     allergies: z.string().trim().optional().default(""),
     guestCount: z.coerce.number().int().min(1),
-    profilePhotoUrl: z.string().trim().url().optional().or(z.literal(""))
+    profilePhotoUrl: z.string().trim().url().optional().or(z.literal("")),
+    isNeighbor: z.boolean().optional()
   }),
   params: z.object({}).optional(),
   query: z.object({}).optional()
@@ -35,6 +37,7 @@ const createRsvpSchema = z.object({
 const updateRsvpSchema = z.object({
   body: z.object({
     food: z.string().trim().optional().default(""),
+    allergies: z.string().trim().optional().default(""),
     guestCount: z.coerce.number().int().min(1)
   }),
   params: z.object({
@@ -118,11 +121,49 @@ router.post(
         return;
       }
 
-      const isGuest = !request.user;
+      let isGuest = !request.user;
       const profilePhotoUrl = request.body.profilePhotoUrl || "";
       let attendeeName = request.body.name || "";
       let rsvp = null;
       let user = null;
+      let token = null;
+
+      if (!request.user && request.body.email) {
+        user = await User.findOneAndUpdate(
+          { email: request.body.email },
+          {
+            $setOnInsert: {
+              email: request.body.email,
+              name: request.body.name || ""
+            }
+          },
+          { upsert: true, returnDocument: "after" }
+        );
+
+        if (request.body.name && user.name !== request.body.name) {
+          user.name = request.body.name;
+        }
+
+        if (request.body.profilePhotoUrl) {
+          user.profilePhotoUrl = request.body.profilePhotoUrl;
+        }
+
+        if (typeof request.body.isNeighbor === "boolean") {
+          user.isNeighbor = request.body.isNeighbor;
+        }
+
+        await user.save();
+
+        token = createJwtToken({
+          userId: user._id.toString(),
+          email: user.email
+        });
+        isGuest = false;
+        request.user = {
+          userId: user._id.toString(),
+          email: user.email
+        };
+      }
 
       if (isGuest && !attendeeName) {
         next(createHttpError(400, "Guest name is required"));
@@ -130,7 +171,9 @@ router.post(
       }
 
       if (!isGuest) {
-        user = await User.findById(request.user.userId);
+        if (!user) {
+          user = await User.findById(request.user.userId);
+        }
 
         if (!user) {
           next(createHttpError(404, "User not found"));
@@ -187,7 +230,7 @@ router.post(
           await emailService.sendRSVPNotification(
             {
               attendeeName,
-              phone: user?.phone || "",
+              email: user?.email || "Guest RSVP",
               food: request.body.food,
               guestCount: request.body.guestCount,
               eventDateLabel: getEventDateLabel(event.date),
@@ -211,7 +254,8 @@ router.post(
           guestCount: rsvp.guestCount,
           isGuest: rsvp.isGuest,
           profilePhotoUrl: user?.profilePhotoUrl || profilePhotoUrl
-        }
+        },
+        ...(token ? { token } : {})
       });
     } catch (error) {
       logger.error("Failed to create RSVP", error);
@@ -219,6 +263,30 @@ router.post(
     }
   }
 );
+
+router.get("/mine", requireAuth, async (request, response, next) => {
+  try {
+    const rsvps = await RSVP.find({ userId: request.user.userId })
+      .sort({ createdAt: -1 })
+      .populate("eventId", "date theme cancelled");
+
+    response.status(200).json({
+      rsvps: rsvps.map((rsvp) => ({
+        id: rsvp._id.toString(),
+        eventDate: rsvp.eventId?.date,
+        eventTheme: rsvp.eventId?.theme,
+        food: rsvp.food,
+        allergies: rsvp.allergies || "",
+        guestCount: rsvp.guestCount,
+        cancelledAt: rsvp.cancelledAt,
+        createdAt: rsvp.createdAt
+      }))
+    });
+  } catch (error) {
+    logger.error("Failed to fetch user RSVPs", error);
+    next(error);
+  }
+});
 
 router.put(
   "/:id",
@@ -234,6 +302,7 @@ router.put(
         },
         {
           food: request.body.food,
+          allergies: request.body.allergies,
           guestCount: request.body.guestCount
         },
         { returnDocument: "after" }
@@ -248,6 +317,7 @@ router.put(
         rsvp: {
           id: rsvp._id.toString(),
           food: rsvp.food,
+          allergies: rsvp.allergies || "",
           guestCount: rsvp.guestCount
         }
       });

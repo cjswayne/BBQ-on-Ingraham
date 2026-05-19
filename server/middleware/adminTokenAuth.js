@@ -4,13 +4,6 @@ import { logger } from "../utils/logger.js";
 
 const jwtSecret = process.env.JWT_SECRET || "development-secret";
 
-const getAdminPhones = () => {
-  return String(process.env.ADMIN_PHONES || "")
-    .split(",")
-    .map((phone) => phone.trim())
-    .filter(Boolean);
-};
-
 const getBearerToken = (authorizationHeader = "") => {
   if (!authorizationHeader.startsWith("Bearer ")) {
     return null;
@@ -24,7 +17,13 @@ export const createAdminToken = () => {
   return jwt.sign({ adminPasswordAuth: true }, jwtSecret, { expiresIn: "8h" });
 };
 
-// Accepts either a password-based admin JWT or a phone JWT where the phone is in ADMIN_PHONES
+/**
+ * Ensures the request has an admin JWT with password-based admin auth.
+ * @param {import("express").Request} request - The incoming request object.
+ * @param {import("express").Response} response - The outgoing response object.
+ * @param {import("express").NextFunction} next - The next middleware callback.
+ * @returns {void}
+ */
 export const requireAdminAccess = (request, response, next) => {
   const token = getBearerToken(request.headers.authorization);
 
@@ -42,16 +41,9 @@ export const requireAdminAccess = (request, response, next) => {
       return;
     }
 
-    const phone = String(decoded.phone || "").trim();
-    const adminPhones = getAdminPhones();
-
-    if (phone && adminPhones.includes(phone)) {
-      request.user = { userId: decoded.userId, phone };
-      next();
-      return;
-    }
-
-    logger.warn("Admin access denied via token", { phone: phone || "none" });
+    logger.warn("Admin access denied via token", {
+      adminPasswordAuth: decoded.adminPasswordAuth === true
+    });
     response.status(403).json({ error: "Admin access required" });
   } catch (error) {
     logger.error("Admin token verification failed", error);

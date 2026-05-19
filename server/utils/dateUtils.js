@@ -92,14 +92,47 @@ export const getMondayDate = (date = new Date()) => {
   };
 };
 
-export const getNextMonday = (date = new Date()) => {
-  const mondayDate = getMondayDate(date);
+// Returns the day-of-month for the first Monday of the given year/month
+const getFirstMondayDayOfMonth = (year, month) => {
+  // Probe noon UTC on the 1st to safely determine Pacific weekday regardless of DST
+  const probeDate = new Date(Date.UTC(year, month - 1, 1, 12, 0, 0));
+  const parts = getPacificDateParts(probeDate);
+  const weekdayIdx = WEEKDAY_INDEX[parts.weekday] ?? 0;
+  const daysUntilMonday = weekdayIdx === 1 ? 0 : (8 - weekdayIdx) % 7;
+  return 1 + daysUntilMonday;
+};
 
-  return getPacificMidnightUtcDate(
-    mondayDate.year,
-    mondayDate.month,
-    mondayDate.day
-  );
+// Returns { year, month, day } pairs for the 1st and 3rd Mondays of the given month
+export const getEventMondaysOfMonth = (year, month) => {
+  const firstMondayDay = getFirstMondayDayOfMonth(year, month);
+  return [
+    { year, month, day: firstMondayDay },
+    { year, month, day: firstMondayDay + 14 }
+  ];
+};
+
+// Returns the next event date: 1st or 3rd Monday of the month.
+// If today is on or before the 1st Monday → 1st Monday.
+// If today is on or before the 3rd Monday → 3rd Monday.
+// If both have passed → 1st Monday of next month.
+export const getNextMonday = (date = new Date()) => {
+  const today = getPacificDateParts(date);
+  const todayNum = today.year * 10000 + today.month * 100 + today.day;
+
+  const currentMondays = getEventMondaysOfMonth(today.year, today.month);
+  for (const m of currentMondays) {
+    const mNum = m.year * 10000 + m.month * 100 + m.day;
+    if (todayNum <= mNum) {
+      return getPacificMidnightUtcDate(m.year, m.month, m.day);
+    }
+  }
+
+  // Both event Mondays for this month have passed — advance to next month
+  const nextMonth = today.month === 12 ? 1 : today.month + 1;
+  const nextYear = today.month === 12 ? today.year + 1 : today.year;
+  const nextMonthMondays = getEventMondaysOfMonth(nextYear, nextMonth);
+  const first = nextMonthMondays[0];
+  return getPacificMidnightUtcDate(first.year, first.month, first.day);
 };
 
 export const isMonday = (date = new Date()) => {

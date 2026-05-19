@@ -2,12 +2,13 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    phone: {
+    email: {
       type: String,
       required: true,
       unique: true,
       index: true,
-      trim: true
+      trim: true,
+      lowercase: true
     },
     name: {
       type: String,
@@ -18,6 +19,22 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: ""
+    },
+    passwordHash: {
+      type: String,
+      default: ""
+    },
+    passwordResetToken: {
+      type: String,
+      default: ""
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null
+    },
+    isNeighbor: {
+      type: Boolean,
+      default: false
     }
   },
   {

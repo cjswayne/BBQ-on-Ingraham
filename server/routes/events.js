@@ -55,7 +55,7 @@ const getOrCreateNextEvent = async () => {
 const serializeEventPayload = async (event) => {
   const [rsvps, pollOptions] = await Promise.all([
     RSVP.find({ eventId: event._id, cancelledAt: null })
-      .populate("userId", "name phone profilePhotoUrl")
+      .populate("userId", "name email profilePhotoUrl isNeighbor")
       .sort({ createdAt: 1 }),
     ThemePollOption.find({ eventId: event._id }).sort({ createdAt: 1 })
   ]);
@@ -70,13 +70,15 @@ const serializeEventPayload = async (event) => {
     },
     rsvps: rsvps.map((rsvp) => ({
       id: rsvp._id.toString(),
+      userId: rsvp.userId?._id?.toString() || null,
       attendeeName: rsvp.userId?.name || rsvp.guestName,
-      phone: rsvp.userId?.phone || "",
+      email: rsvp.userId?.email || "",
       profilePhotoUrl: rsvp.userId?.profilePhotoUrl || "",
       food: rsvp.food,
       allergies: rsvp.allergies || "",
       guestCount: rsvp.guestCount,
-      isGuest: rsvp.isGuest
+      isGuest: rsvp.isGuest,
+      isNeighbor: rsvp.userId?.isNeighbor || false
     })),
     pollOptions: pollOptions.map((option) => ({
       id: option._id.toString(),

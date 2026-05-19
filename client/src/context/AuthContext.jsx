@@ -13,6 +13,7 @@ const AuthContext = createContext(null);
 
 const TOKEN_STORAGE_KEY = "barbecue-mondays-token";
 const TOKEN_EXPIRY_STORAGE_KEY = "barbecue-mondays-token-expiry";
+const EMAIL_STORAGE_KEY = "barbecue-mondays-user-email";
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const getStoredToken = () => {
@@ -39,15 +40,24 @@ const storeAuthToken = (token) => {
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => getStoredToken());
   const [user, setUser] = useState(null);
+  const [storedEmail, setStoredEmail] = useState(() =>
+    localStorage.getItem(EMAIL_STORAGE_KEY)
+  );
   const [isLoading, setIsLoading] = useState(Boolean(getStoredToken()));
 
   const logout = useCallback(() => {
     clearStoredAuth();
+    localStorage.removeItem(EMAIL_STORAGE_KEY);
     setToken(null);
     setUser(null);
+    setStoredEmail(null);
     setIsLoading(false);
   }, []);
 
+  /**
+   * Refreshes the authenticated user from the API and syncs local storage values.
+   * @returns {Promise<object|null>} Refreshed user data, or null when unavailable.
+   */
   const refreshUser = useCallback(async () => {
     const currentToken = getStoredToken();
     const currentExpiry = getStoredExpiry();
@@ -63,6 +73,10 @@ export const AuthProvider = ({ children }) => {
       const response = await apiClient.getCurrentUser();
       setToken(currentToken);
       setUser(response.user);
+      if (response.user?.email) {
+        localStorage.setItem(EMAIL_STORAGE_KEY, response.user.email);
+        setStoredEmail(response.user.email);
+      }
 
       return response.user;
     } catch (error) {
@@ -74,10 +88,23 @@ export const AuthProvider = ({ children }) => {
     }
   }, [logout]);
 
+  /**
+   * Persists the auth session and user profile details in local state and storage.
+   * @param {string} nextToken - Auth token from a successful login.
+   * @param {object} nextUser - User object returned by the auth API.
+   * @returns {void}
+   */
   const login = useCallback((nextToken, nextUser) => {
     storeAuthToken(nextToken);
+    const nextEmail = nextUser?.email || null;
+    if (nextEmail) {
+      localStorage.setItem(EMAIL_STORAGE_KEY, nextEmail);
+    } else {
+      localStorage.removeItem(EMAIL_STORAGE_KEY);
+    }
     setToken(nextToken);
     setUser(nextUser);
+    setStoredEmail(nextEmail);
     setIsLoading(false);
   }, []);
 
@@ -93,13 +120,14 @@ export const AuthProvider = ({ children }) => {
     return {
       token,
       user,
+      storedEmail,
       isLoading,
       isAuthenticated: Boolean(token && user),
       login,
       logout,
       refreshUser
     };
-  }, [isLoading, login, logout, refreshUser, token, user]);
+  }, [isLoading, login, logout, refreshUser, storedEmail, token, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

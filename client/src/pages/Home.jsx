@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import { apiClient } from "../api/client.js";
 import AdminPasswordGate from "../components/AdminPasswordGate.jsx";
-import { GuestRSVPForm } from "../components/GuestRSVPForm.jsx";
+import { EditRSVPModal } from "../components/EditRSVPModal.jsx";
+import { RSVPFormUnified } from "../components/RSVPFormUnified.jsx";
 import { RSVPCard } from "../components/RSVPCard.jsx";
 import { ThemePoll } from "../components/ThemePoll.jsx";
 import { VideoHero } from "../components/VideoHero.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useAdminMode } from "../hooks/useAdminMode.js";
 import { formatEventDateLabel } from "../utils/date.js";
 
@@ -53,8 +55,19 @@ const MAP_EMBED_URL =
   "https://maps.google.com/maps?q=4262+Ingraham+St,+San+Diego,+CA+92109&output=embed&z=13";
 
 // Hero text overlay content — uses inherited color from VideoHero scroll transition
-const HeroContent = () => {
+const HeroContent = ({ eventDate }) => {
   const [isMapOpen, setIsMapOpen] = useState(false);
+
+  // Derive whether the next event is within 7 days using the API-provided date
+  const isWithinWeek = (() => {
+    if (!eventDate) return false;
+    const dateStr = typeof eventDate === "string" ? eventDate.slice(0, 10) : new Date(eventDate).toISOString().slice(0, 10);
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const eventDay = new Date(y, m - 1, d);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.round((eventDay - today) / 86400000) <= 7;
+  })();
 
   // Close modal on Escape key
   useEffect(() => {
@@ -67,41 +80,79 @@ const HeroContent = () => {
 
   return (
     <>
-      <p className="text-sm font-medium uppercase tracking-[0.18em] opacity-80">
-        Apartment Potluck
-      </p>
-      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
-        BBQ On Ingraham
-      </h1>
-      <p className="mt-3 max-w-2xl text-sm font-normal leading-6 opacity-90 sm:text-base">
-        Cook on our Big Green Egg, enjoy delicious food and fantastic company, 1st and 3rd mondays of the month @ 8-11pm.
-      </p>
-      <p className="mt-3 inline-flex max-w-2xl flex-wrap items-center justify-center gap-1.5 text-sm font-normal leading-6 opacity-90 sm:text-base">
-        4262 Ingraham St, San Diego, CA 92109
-        <button
-          aria-label="View on map"
-          className="inline-flex items-center justify-center rounded-full opacity-70 transition hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-current"
-          onClick={() => setIsMapOpen(true)}
-          type="button"
-        >
-          {/* Question circle icon */}
-          <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="12" cy="17" fill="currentColor" r="0.5" stroke="none" />
-          </svg>
-        </button>
-        <a
-          className="underline underline-offset-2 transition-opacity hover:opacity-100"
-          href="https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Get Directions 
-        </a>
+
+      <h1 className="mt-2 text-2xl font-medium leading-tight sm:text-3xl text">Apartment potluck</h1>
+      <p className="mt-1 max-w-xl text-sm font-normal leading-6 opacity-80 sm:text-base">
+        Big Green Egg cookouts with great food and good neighbors.
       </p>
 
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="mt-5 flex flex-col gap-3.5 text-sm">
+        {/* Date row */}
+        <div className="flex items-start gap-3 text-start">
+          <svg aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 opacity-60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" />
+            <path d="M16 3v4" />
+            <path d="M8 3v4" />
+            <path d="M4 11h16" />
+            <path d="M9 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+          </svg>
+          <div>
+            <p className="font-medium leading-none">1st &amp; 3rd Mondays</p>
+            <p className="mt-1 text-xs opacity-70">8–11pm</p>
+          </div>
+        </div>
+
+        {/* Location row */}
+        <div className="flex items-start gap-3 text-start">
+          <svg aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 opacity-60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+            <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z" />
+          </svg>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium leading-none">4262 Ingraham St</p>
+            <p className="mt-1 inline-flex flex-wrap items-center gap-x-1 text-xs opacity-70">
+              San Diego, CA 92109
+              <button
+                aria-label="View on map"
+                className="inline-flex items-center justify-center rounded-full opacity-70 transition hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-current"
+                onClick={() => setIsMapOpen(true)}
+                type="button"
+              >
+                <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="12" cy="17" fill="currentColor" r="0.5" stroke="none" />
+                </svg>
+              </button>
+              ·
+              <a
+                className="underline underline-offset-2 transition-opacity hover:opacity-100"
+                href="https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                Directions
+              </a>
+            </p>
+          </div>
+        </div>
+
+        {/* Bring a dish row */}
+        <div className="flex items-start gap-3 text-start">
+          <svg aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 opacity-60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M19 3v12h-5c-.023 -3.681 .184 -7.406 5 -12zm0 12v6h-1v-3m-10 -14v17m-3 -17v3a3 3 0 1 0 6 0v-3" />
+          </svg>
+          <div>
+            <p className="font-medium leading-none">Bring a dish</p>
+            <p className="mt-1 text-xs opacity-70">Themed each week — vote below</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-col items-stretch gap-3">
         {/* Ping ring pulses behind the button to draw attention */}
         <span className="relative inline-flex">
           <span
@@ -109,18 +160,33 @@ const HeroContent = () => {
             className="absolute inset-0 animate-ping rounded-full bg-pb-palm opacity-40 [animation-duration:3s]"
           />
           <a
-            className="relative rounded-full bg-pb-palm px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-105 "
+            className="relative flex w-full items-center justify-center gap-2 rounded-full bg-pb-palm px-4 py-3.5 text-sm font-medium text-white transition hover:brightness-105"
             href="#rsvp"
           >
-            RSVP
+            {isWithinWeek ? "RSVP for next Monday" : "RSVP"}
+            <svg aria-hidden="true" className="h-[17px] w-[17px]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M5 12l14 0" />
+              <path d="M13 18l6 -6" />
+              <path d="M13 6l6 6" />
+            </svg>
           </a>
         </span>
-        <a
-          className="rounded-full border border-current/30 px-4 py-2.5 text-sm font-medium transition hover:opacity-80"
-          href="#poll"
-        >
-          Vote for this week&apos;s theme
-        </a>
+        <div>
+          <a
+            className="inline-flex items-center gap-1 text-sm opacity-60 transition hover:opacity-90"
+            href="#poll"
+          >
+            <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M12 3c1.918 0 3.52 1.35 3.91 3.151a4 4 0 0 1 2.09 7.723l0 7.126h-12v-7.126a4 4 0 1 1 2.092 -7.723a4 4 0 0 1 3.908 -3.151z" />
+              <path d="M8 21v-7.5" />
+              <path d="M12 21v-7.5" />
+              <path d="M16 21v-7.5" />
+            </svg>
+            Vote for this week&apos;s theme
+          </a>
+        </div>
       </div>
 
       {/* Map modal — backdrop click closes, Escape key closes */}
@@ -168,7 +234,9 @@ const Home = () => {
   const [eventData, setEventData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [editingRsvp, setEditingRsvp] = useState(null);
   const adminMode = useAdminMode();
+  const { isAuthenticated, user } = useAuth();
 
   const loadEvent = useCallback(async () => {
     setIsLoading(true);
@@ -189,10 +257,51 @@ const Home = () => {
     loadEvent();
   }, [loadEvent]);
 
+  /**
+   * Submits a new RSVP and refreshes event data.
+   * @param {object} body - RSVP payload from form.
+   * @returns {Promise<object>} API response payload from RSVP creation.
+   */
   const handleSubmit = async (body) => {
     const response = await apiClient.createRsvp(body);
     await loadEvent();
     return response;
+  };
+
+  /**
+   * Persists RSVP edits and refreshes the event list.
+   * @param {{ food: string, allergies: string, guestCount: number }} body - RSVP update payload.
+   * @returns {Promise<void>} Completes when update flow finishes.
+   */
+  const handleEditSave = async (body) => {
+    if (!editingRsvp?.id) {
+      return;
+    }
+
+    try {
+      await apiClient.updateRsvp(editingRsvp.id, body);
+      await loadEvent();
+      setEditingRsvp(null);
+    } catch (error) {
+      console.error("Failed to save RSVP edits", error);
+      throw error;
+    }
+  };
+
+  /**
+   * Cancels an RSVP and refreshes the event list.
+   * @param {string} rsvpId - RSVP id to cancel.
+   * @returns {Promise<void>} Completes when cancellation flow finishes.
+   */
+  const handleEditCancel = async (rsvpId) => {
+    try {
+      await apiClient.cancelRsvp(rsvpId);
+      await loadEvent();
+      setEditingRsvp(null);
+    } catch (error) {
+      console.error("Failed to cancel RSVP", error);
+      throw error;
+    }
   };
 
   const handleThemeRefresh = async (action, payload) => {
@@ -249,7 +358,7 @@ const Home = () => {
     return (
       <>
         <VideoHero>
-          <HeroContent />
+          <HeroContent eventDate={eventData?.event?.date} />
         </VideoHero>
         <div className="relative z-10 mx-auto max-w-md px-4 py-10">
           <AdminPasswordGate onAuthenticated={adminMode.handleAuthenticated} />
@@ -261,7 +370,7 @@ const Home = () => {
   return (
     <>
       <VideoHero>
-        <HeroContent />
+        <HeroContent eventDate={eventData?.event?.date} />
       </VideoHero>
 
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
@@ -286,7 +395,7 @@ const Home = () => {
         {/* Hero info rendered as a standard surface-card in the content flow */}
         <section className="surface-card overflow-hidden text-center">
           <div className="px-6 py-8 sm:px-10 sm:py-10">
-            <HeroContent />
+            <HeroContent eventDate={eventData?.event?.date} />
           </div>
         </section>
         {eventData?.event?.cancelled && (
@@ -359,30 +468,44 @@ const Home = () => {
 
             {(() => {
               const avatarColors = assignAvatarColors(eventData?.rsvps ?? []);
-              return eventData?.rsvps?.map((rsvp, index) => (
-                <div
-                  className={index > 0 ? "border-t border-pb-driftwood/10" : ""}
-                  key={rsvp.id}
-                >
-                  <RSVPCard
-                    avatarColor={avatarColors[index]}
-                    isAdmin={adminMode.isAuthenticated}
-                    onAdminDelete={() => handleAdminDeleteRsvp(rsvp.id)}
-                    rsvp={rsvp}
-                  />
-                </div>
-              ));
+              return eventData?.rsvps?.map((rsvp, index) => {
+                const isOwner = Boolean(isAuthenticated && user?.id && rsvp.userId === user.id);
+
+                return (
+                  <div
+                    className={index > 0 ? "border-t border-pb-driftwood/10" : ""}
+                    key={rsvp.id}
+                  >
+                    <RSVPCard
+                      avatarColor={avatarColors[index]}
+                      isAdmin={adminMode.isAuthenticated}
+                      isOwner={isOwner}
+                      onEdit={() => setEditingRsvp(rsvp)}
+                      onAdminDelete={() => handleAdminDeleteRsvp(rsvp.id)}
+                      rsvp={rsvp}
+                    />
+                  </div>
+                );
+              });
             })()}
           </div>
 
           <div className="space-y-4">
-            <GuestRSVPForm
+            <RSVPFormUnified
               cancelled={eventData?.event?.cancelled ?? false}
+              eventDate={eventData?.event?.date}
               onSubmit={handleSubmit}
             />
           </div>
         </section>
       </main>
+
+      <EditRSVPModal
+        onCancel={handleEditCancel}
+        onClose={() => setEditingRsvp(null)}
+        onSave={handleEditSave}
+        rsvp={editingRsvp}
+      />
     </>
   );
 };

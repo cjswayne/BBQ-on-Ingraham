@@ -15,15 +15,13 @@ const { User } = await import("../models/User.js");
 
 const buildTestApp = () => {
   const app = express();
-
   app.use(express.json());
   app.use("/api/admin", adminRouter);
   app.use(errorHandler);
-
   return app;
 };
 
-describe("admin auth guard", () => {
+describe("admin routes", () => {
   let mongoServer;
   let app;
 
@@ -45,44 +43,74 @@ describe("admin auth guard", () => {
     await mongoServer.stop();
   });
 
-  it("blocks authenticated users who are not in ADMIN_PHONES", async () => {
-    process.env.ADMIN_PHONES = "+16195559999";
+  describe("POST /api/admin/login", () => {
+    it("returns 401 when the password is incorrect", async () => {
+      process.env.ADMIN_PASSWORD = "correct-admin-pass";
 
-    const user = await User.create({
-      phone: "+16195550111",
-      name: "Resident"
+      const response = await request(app)
+        .post("/api/admin/login")
+        .send({ password: "wrong-pass" });
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toMatch(/Incorrect password/i);
     });
-    const token = createJwtToken({
-      userId: user._id.toString(),
-      phone: user.phone
+
+    it("returns a JWT token when the password is correct", async () => {
+      process.env.ADMIN_PASSWORD = "correct-admin-pass";
+
+      const response = await request(app)
+        .post("/api/admin/login")
+        .send({ password: "correct-admin-pass" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.token).toBeTruthy();
     });
 
-    const response = await request(app)
-      .get("/api/admin/stats")
-      .set("Authorization", `Bearer ${token}`);
+    it("returns 503 when ADMIN_PASSWORD env var is not configured", async () => {
+      delete process.env.ADMIN_PASSWORD;
 
-    expect(response.status).toBe(403);
-    expect(response.body.error).toMatch(/Admin access required/i);
+      const response = await request(app)
+        .post("/api/admin/login")
+        .send({ password: "any-password" });
+
+      expect(response.status).toBe(503);
+    });
   });
 
-  it("allows users whose phone number is in ADMIN_PHONES", async () => {
-    process.env.ADMIN_PHONES = "+16195550111";
-
-    const user = await User.create({
-      phone: "+16195550111",
-      name: "Planner"
-    });
-    const token = createJwtToken({
-      userId: user._id.toString(),
-      phone: user.phone
+  describe("GET /api/admin/stats", () => {
+    it("returns 401 when no token is provided", async () => {
+      const response = await request(app).get("/api/admin/stats");
+      expect(response.status).toBe(401);
     });
 
-    const response = await request(app)
-      .get("/api/admin/stats")
-      .set("Authorization", `Bearer ${token}`);
+    it("returns 403 when a regular user JWT is provided instead of admin token", async () => {
+      const user = await User.create({ email: "user@example.com", name: "Regular User" });
+      const token = createJwtToken({ userId: user._id.toString(), email: user.email });
 
-    expect(response.status).toBe(200);
-    expect(response.body.stats).toBeTruthy();
-    expect(response.body.settings.notificationEmails).toContain("planner@example.com");
+      const response = await request(app)
+        .get("/api/admin/stats")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toMatch(/Admin access required/i);
+    });
+
+    it("returns stats and settings when a valid admin token is used", async () => {
+      process.env.ADMIN_PASSWORD = "correct-admin-pass";
+
+      const loginResponse = await request(app)
+        .post("/api/admin/login")
+        .send({ password: "correct-admin-pass" });
+
+      const adminToken = loginResponse.body.token;
+
+      const statsResponse = await request(app)
+        .get("/api/admin/stats")
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(statsResponse.status).toBe(200);
+      expect(statsResponse.body.stats).toBeTruthy();
+      expect(statsResponse.body.settings.notificationEmails).toContain("planner@example.com");
+    });
   });
 });

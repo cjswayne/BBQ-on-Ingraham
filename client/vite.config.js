@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import compression from "vite-plugin-compression";
 
 export default defineConfig({
+  envDir: "..",
   plugins: [
     react(),
     compression({ algorithm: "gzip", threshold: 1024 }),

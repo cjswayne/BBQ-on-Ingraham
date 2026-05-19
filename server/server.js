@@ -11,8 +11,10 @@ import { connectToDatabase } from "./db/connect.js";
 import adminRouter from "./routes/admin.js";
 import authRouter from "./routes/auth.js";
 import eventsRouter from "./routes/events.js";
+import mediaRouter from "./routes/media.js";
 import rsvpRouter from "./routes/rsvp.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { startThemeScheduler } from "./services/themeScheduler.js";
 import { logger } from "./utils/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -57,6 +59,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/events", eventsRouter);
 app.use("/api/rsvps", rsvpRouter);
+app.use("/api/media", mediaRouter);
 app.use("/api/admin", adminRouter);
 
 app.use(
@@ -84,6 +87,7 @@ app.use(errorHandler);
 
 export const startServer = async () => {
   await connectToDatabase();
+  startThemeScheduler();
 
   return app.listen(port, () => {
     logger.info(`BBQ On Ingraham server listening on port ${port}`);

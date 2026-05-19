@@ -109,7 +109,7 @@ router.get("/stats", requireAdminAccess, async (_request, response, next) => {
     ]);
     const [rsvps, pollOptions] = await Promise.all([
       RSVP.find({ eventId: event._id, cancelledAt: null })
-        .populate("userId", "name phone profilePhotoUrl")
+        .populate("userId", "name email profilePhotoUrl")
         .sort({ createdAt: 1 }),
       ThemePollOption.find({ eventId: event._id }).sort({ createdAt: 1 })
     ]);
@@ -133,7 +133,7 @@ router.get("/stats", requireAdminAccess, async (_request, response, next) => {
         rsvps: rsvps.map((rsvp) => ({
           id: rsvp._id.toString(),
           attendeeName: rsvp.userId?.name || rsvp.guestName,
-          phone: rsvp.userId?.phone || "",
+          email: rsvp.userId?.email || "",
           food: rsvp.food,
           guestCount: rsvp.guestCount,
           profilePhotoUrl: rsvp.userId?.profilePhotoUrl || "",

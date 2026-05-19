@@ -21,10 +21,22 @@ const respondUnauthorized = (response, message) => {
   response.status(401).json({ error: message });
 };
 
-export const createJwtToken = (payload) => {
-  return jwt.sign(payload, jwtSecret, { expiresIn: jwtExpiresIn });
+/**
+ * Creates a signed JWT from a user identity payload.
+ * @param {{userId: string, email: string}} payload - User identity values for token claims.
+ * @returns {string} Signed JWT token.
+ */
+export const createJwtToken = ({ userId, email }) => {
+  return jwt.sign({ userId, email }, jwtSecret, { expiresIn: jwtExpiresIn });
 };
 
+/**
+ * Requires a valid auth token and assigns user identity to the request.
+ * @param {import("express").Request} request - Incoming request object.
+ * @param {import("express").Response} response - Outgoing response object.
+ * @param {import("express").NextFunction} next - Express next middleware function.
+ * @returns {void}
+ */
 export const requireAuth = (request, response, next) => {
   const token = getBearerToken(request.headers.authorization);
 
@@ -38,7 +50,7 @@ export const requireAuth = (request, response, next) => {
 
     request.user = {
       userId: decodedToken.userId,
-      phone: decodedToken.phone
+      email: decodedToken.email
     };
     next();
   } catch (error) {
@@ -47,6 +59,13 @@ export const requireAuth = (request, response, next) => {
   }
 };
 
+/**
+ * Optionally attaches user identity to the request when a valid token exists.
+ * @param {import("express").Request} request - Incoming request object.
+ * @param {import("express").Response} _response - Unused response object.
+ * @param {import("express").NextFunction} next - Express next middleware function.
+ * @returns {void}
+ */
 export const optionalAuth = (request, _response, next) => {
   const token = getBearerToken(request.headers.authorization);
 
@@ -61,7 +80,7 @@ export const optionalAuth = (request, _response, next) => {
 
     request.user = {
       userId: decodedToken.userId,
-      phone: decodedToken.phone
+      email: decodedToken.email
     };
   } catch (error) {
     logger.error("Optional JWT verification failed", error);

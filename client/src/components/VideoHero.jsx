@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import hero1 from "../assets/hero-1.mp4";
 import hero2 from "../assets/hero-2.mp4";
+import hero3 from "../assets/hero-3.mp4";
+import hero4 from "../assets/hero-4.mp4";
 
-const VIDEO_SRCS = [hero1, hero2];
+const VIDEO_SRCS = [hero3, hero4, hero1, hero2];
 const MOBILE_BREAKPOINT = 768;
 const FADE_DURATION_MS = 2000;
 const CROSSFADE_LEAD_S = 2.5;
@@ -269,6 +272,19 @@ export const VideoHero = ({ children }) => {
             {children}
           </div>
         </div>
+
+        {/* Share button — bottom-right corner, navigates to /share */}
+        <Link
+          aria-label="Share this page"
+          className="absolute bottom-6 right-6 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          to="/share"
+        >
+          <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" viewBox="0 0 24 24">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" x2="12" y1="2" y2="15" />
+          </svg>
+        </Link>
       </div>
 
       {/* Spacer — matches fade distance so content lands below the header when overlay finishes fading */}

@@ -63,18 +63,52 @@ export const adminSession = {
 };
 
 export const apiClient = {
-  sendOtp: (phone) => {
-    return request("/api/auth/send-otp", {
+  register: (email, name) =>
+    request("/api/auth/register", {
       method: "POST",
-      body: { phone }
-    });
-  },
-  verifyOtp: (phone, code) => {
-    return request("/api/auth/verify-otp", {
+      body: { email, name }
+    }),
+  login: (email, password) =>
+    request("/api/auth/login", {
       method: "POST",
-      body: { phone, code }
-    });
-  },
+      body: { email, password }
+    }),
+  setPassword: (token, password, confirmPassword) =>
+    request("/api/auth/set-password", {
+      method: "POST",
+      body: { token, password, confirmPassword }
+    }),
+  setPasswordByEmail: (email, password, confirmPassword) =>
+    request("/api/auth/set-password", {
+      method: "POST",
+      body: { email, password, confirmPassword }
+    }),
+  lookupUser: (email) =>
+    request(`/api/auth/lookup?email=${encodeURIComponent(email)}`),
+  uploadMedia: (body) =>
+    request("/api/media", {
+      method: "POST",
+      body
+    }),
+  getMedia: (page = 1, limit = 20) =>
+    request(`/api/media?page=${page}&limit=${limit}`),
+  getMediaById: (id) => request(`/api/media/${id}`),
+  getMyMedia: () => request("/api/media/mine"),
+  deleteMedia: (id) =>
+    request(`/api/media/${id}`, {
+      method: "DELETE"
+    }),
+  getMyRsvps: () => request("/api/rsvps/mine"),
+  updateProfile: (body) =>
+    request("/api/auth/profile", {
+      method: "PUT",
+      body
+    }),
+  setupProfile: (body) =>
+    request("/api/auth/profile-setup", {
+      method: "PUT",
+      body
+    }),
   getCurrentUser: () => request("/api/auth/me"),
   getNextEvent: () => request("/api/events/next"),
   createRsvp: (body) =>

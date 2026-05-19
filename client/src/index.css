@@ -66,9 +66,9 @@ img {
 .input-field {
   width: 100%;
   border: 1px solid color-mix(in srgb, var(--color-pb-driftwood) 22%, transparent);
-  border-radius: 0.9rem;
+  border-radius: 0.2rem;
   background: rgba(255, 255, 255, 0.88);
-  padding: 0.8rem 0.95rem;
+  padding: 0.4rem 0.6rem;
   color: var(--color-pb-ink);
 }
 
@@ -91,4 +91,16 @@ img {
 .ytp-show-cards-title {
   display: none !important;
   opacity: 0 !important;
+}
+
+@keyframes neighbor-swish {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.neighbor-badge-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: neighbor-swish 3s ease-in-out infinite;
 }

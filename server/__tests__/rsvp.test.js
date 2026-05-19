@@ -24,11 +24,9 @@ const { User } = await import("../models/User.js");
 
 const buildTestApp = () => {
   const app = express();
-
   app.use(express.json());
   app.use("/api/rsvps", rsvpRouter);
   app.use(errorHandler);
-
   return app;
 };
 
@@ -66,12 +64,12 @@ describe("rsvp routes", () => {
 
   it("creates and cancels an authenticated RSVP", async () => {
     const user = await User.create({
-      phone: "+16195550111",
+      email: "alex@example.com",
       name: "Alex"
     });
     const token = createJwtToken({
       userId: user._id.toString(),
-      phone: user.phone
+      email: user.email
     });
 
     const createResponse = await request(app)
@@ -98,5 +96,24 @@ describe("rsvp routes", () => {
 
     expect(cancelResponse.status).toBe(200);
     expect(cancelResponse.body.rsvp.cancelledAt).toBeTruthy();
+  });
+
+  it("auto-creates a user and returns a token when email is supplied without auth", async () => {
+    const response = await request(app).post("/api/rsvps").send({
+      eventDate: "2026-04-20",
+      name: "Taylor",
+      email: "taylor@example.com",
+      food: "Potato salad",
+      guestCount: 1
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body.rsvp.isGuest).toBe(false);
+    expect(response.body.token).toBeTruthy();
+
+    // Confirm the user record was created with the correct email and name
+    const user = await User.findOne({ email: "taylor@example.com" });
+    expect(user).not.toBeNull();
+    expect(user.name).toBe("Taylor");
   });
 });

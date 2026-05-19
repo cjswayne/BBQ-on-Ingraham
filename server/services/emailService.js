@@ -138,6 +138,43 @@ class EmailService {
       throw error;
     }
   }
+
+  /**
+   * Sends a password setup email to a guest RSVP recipient.
+   * @param {string} recipientEmail - Email address that receives the password setup link.
+   * @param {string} token - Password setup token included in the link.
+   * @param {string} clientOrigin - Client origin used to build the password setup URL.
+   * @returns {Promise<void>} Resolves when the email is sent successfully.
+   */
+  async sendPasswordSetEmail(recipientEmail, token, clientOrigin) {
+    const link = `${clientOrigin}/set-password?token=${token}`;
+    const htmlBody = `<!DOCTYPE html>
+  <html lang="en">
+    <body style="font-family: Arial, sans-serif; color: #3b3834;">
+      <h2 style="color: #2E6F95;">Set Your BBQ On Ingraham Password</h2>
+      <p>
+        You recently RSVP'd to BBQ On Ingraham. Click the link below to set your password.
+        This is optional — you only need a password if you want to edit your profile later.
+      </p>
+      <p>
+        <a
+          href="${link}"
+          style="display: inline-block; padding: 10px 16px; background-color: #2E6F95; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold;"
+        >
+          Set your password
+        </a>
+      </p>
+      <p>Or copy this link: <a href="${link}" style="color: #2E6F95;">${link}</a></p>
+      <p><strong>This link expires in 1 hour.</strong></p>
+    </body>
+  </html>`;
+
+    await this.sendEmail(
+      [recipientEmail],
+      "Set Your Password — BBQ On Ingraham",
+      htmlBody
+    );
+  }
 }
 
 export const emailService = new EmailService();
