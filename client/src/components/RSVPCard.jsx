@@ -62,8 +62,9 @@ export const RSVPCard = ({ avatarColor, isAdmin = false, isOwner = false, onAdmi
             </span>
           ) : null}
         </p>
+        
         <p className="text-sm font-normal text-pb-ink">
-          Bringing <span className="font-medium">{rsvp.food}</span>
+          Bringing <span className="font-medium">{rsvp?.food || "???"}</span>
         </p>
         {isAdmin && rsvp.allergies ? (
           <p className="text-xs text-pb-driftwood">

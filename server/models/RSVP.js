@@ -22,8 +22,8 @@ const rsvpSchema = new Schema(
     },
     food: {
       type: String,
-      required: true,
-      trim: true
+      trim: true,
+      default: ""
     },
     allergies: {
       type: String,

@@ -299,11 +299,6 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
     setErrorMessage("");
 
     const resolvedFood = resolveFood();
-    if (!resolvedFood) {
-      setErrorMessage("Please pick a food category or enter what you are bringing.");
-      setIsSubmitting(false);
-      return;
-    }
 
     try {
       const trimmedEmail = formState.email.trim();
@@ -497,7 +492,7 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
             />
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <label className="block text-sm font-medium" htmlFor="guest-email">
               Email <span className="text-xs font-normal text-pb-driftwood">(optional)</span>
             </label>
@@ -513,7 +508,7 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
               type="email"
               value={formState.email}
             />
-          </div>
+          </div> */}
         </>
       )}
 
