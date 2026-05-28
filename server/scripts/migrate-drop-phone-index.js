@@ -21,8 +21,10 @@ const TARGET_INDEX = "phone_1";
 
 const connectDb = async () => {
   // Accept either MONGODB_URI (production/Render) or MONGO_URI (local dev alias)
-  const uri = "mongodb+srv://cjswayne:v3TA4iTB4jlhU2SK@cluster0.9aeyrgj.mongodb.net/bbq-on-ingraham";
-  
+  const uri = isTest
+    ? "mongodb://localhost:27017/bbq-test"
+    : process.env.MONGODB_URI || process.env.MONGO_URI;
+
   if (!uri) {
     throw new Error("Neither MONGODB_URI nor MONGO_URI environment variable is set");
   }
