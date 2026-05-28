@@ -14,6 +14,7 @@ const AuthContext = createContext(null);
 const TOKEN_STORAGE_KEY = "barbecue-mondays-token";
 const TOKEN_EXPIRY_STORAGE_KEY = "barbecue-mondays-token-expiry";
 const EMAIL_STORAGE_KEY = "barbecue-mondays-user-email";
+const PHONE_STORAGE_KEY = "barbecue-mondays-user-phone";
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const getStoredToken = () => {
@@ -27,6 +28,7 @@ const getStoredExpiry = () => {
 const clearStoredAuth = () => {
   localStorage.removeItem(TOKEN_STORAGE_KEY);
   localStorage.removeItem(TOKEN_EXPIRY_STORAGE_KEY);
+  localStorage.removeItem(PHONE_STORAGE_KEY);
 };
 
 const storeAuthToken = (token) => {
@@ -43,14 +45,19 @@ export const AuthProvider = ({ children }) => {
   const [storedEmail, setStoredEmail] = useState(() =>
     localStorage.getItem(EMAIL_STORAGE_KEY)
   );
+  const [storedPhone, setStoredPhone] = useState(() =>
+    localStorage.getItem(PHONE_STORAGE_KEY)
+  );
   const [isLoading, setIsLoading] = useState(Boolean(getStoredToken()));
 
   const logout = useCallback(() => {
     clearStoredAuth();
     localStorage.removeItem(EMAIL_STORAGE_KEY);
+    localStorage.removeItem(PHONE_STORAGE_KEY);
     setToken(null);
     setUser(null);
     setStoredEmail(null);
+    setStoredPhone(null);
     setIsLoading(false);
   }, []);
 
@@ -77,6 +84,10 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem(EMAIL_STORAGE_KEY, response.user.email);
         setStoredEmail(response.user.email);
       }
+      if (response.user?.phone) {
+        localStorage.setItem(PHONE_STORAGE_KEY, response.user.phone);
+        setStoredPhone(response.user.phone);
+      }
 
       return response.user;
     } catch (error) {
@@ -97,14 +108,21 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback((nextToken, nextUser) => {
     storeAuthToken(nextToken);
     const nextEmail = nextUser?.email || null;
+    const nextPhone = nextUser?.phone || null;
     if (nextEmail) {
       localStorage.setItem(EMAIL_STORAGE_KEY, nextEmail);
     } else {
       localStorage.removeItem(EMAIL_STORAGE_KEY);
     }
+    if (nextPhone) {
+      localStorage.setItem(PHONE_STORAGE_KEY, nextPhone);
+    } else {
+      localStorage.removeItem(PHONE_STORAGE_KEY);
+    }
     setToken(nextToken);
     setUser(nextUser);
     setStoredEmail(nextEmail);
+    setStoredPhone(nextPhone);
     setIsLoading(false);
   }, []);
 
@@ -121,13 +139,14 @@ export const AuthProvider = ({ children }) => {
       token,
       user,
       storedEmail,
+      storedPhone,
       isLoading,
       isAuthenticated: Boolean(token && user),
       login,
       logout,
       refreshUser
     };
-  }, [isLoading, login, logout, refreshUser, storedEmail, token, user]);
+  }, [isLoading, login, logout, refreshUser, storedEmail, storedPhone, token, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

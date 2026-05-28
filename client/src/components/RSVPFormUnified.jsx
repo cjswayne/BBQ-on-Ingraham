@@ -7,17 +7,20 @@ import { PhotoUpload } from "./PhotoUpload.jsx";
 
 const FOOD_CATEGORIES = ["Meat", "Side", "Dessert"];
 const EMAIL_STORAGE_KEY = "barbecue-mondays-user-email";
-const EMAIL_LOOKUP_DEBOUNCE_MS = 300;
+const PHONE_STORAGE_KEY = "barbecue-mondays-user-phone";
+const LOOKUP_DEBOUNCE_MS = 300;
 
 /**
  * Returns a new default RSVP form state object.
  * @param {string} initialEmail - Email value to prefill from auth context.
- * @returns {{name: string, email: string, foodCategory: string, foodCustom: string, allergies: string, guestCount: number, profilePhotoUrl: string, isNeighbor: boolean}} Fresh state values.
+ * @param {string} initialPhone - Phone value to prefill from auth context.
+ * @returns {object} Fresh state values.
  */
-const createInitialFormState = (initialEmail) => {
+const createInitialFormState = (initialEmail, initialPhone) => {
   return {
     name: "",
     email: initialEmail || "",
+    phone: initialPhone || "",
     foodCategory: "",
     foodCustom: "",
     allergies: "",
@@ -35,6 +38,28 @@ const createInitialFormState = (initialEmail) => {
 const isValidEmailFormat = (value) => {
   const normalizedValue = value.trim();
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedValue);
+};
+
+/**
+ * Validates a phone number with a simple digit pattern.
+ * @param {string} value - Phone text to validate.
+ * @returns {boolean} True when the phone has at least 7 digits.
+ */
+const isValidPhoneFormat = (value) => {
+  const digits = value.replace(/\D/g, "");
+  return digits.length >= 7;
+};
+
+/**
+ * Strips non-digit chars from a phone string to match server regex expectations.
+ * @param {string} value - Raw phone input.
+ * @returns {string} Digits-only phone string (preserves leading +).
+ */
+const normalizePhone = (value) => {
+  const trimmed = value.trim();
+  const hasPlus = trimmed.startsWith("+");
+  const digits = trimmed.replace(/\D/g, "");
+  return hasPlus ? `+${digits}` : digits;
 };
 
 /**
@@ -76,8 +101,8 @@ const getNameInitial = (name) => {
  * @returns {JSX.Element} RSVP form content.
  */
 export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
-  const { storedEmail, isAuthenticated, login } = useAuth();
-  const initialFormState = createInitialFormState(storedEmail || "");
+  const { storedEmail, storedPhone, isAuthenticated, login } = useAuth();
+  const initialFormState = createInitialFormState(storedEmail || "", storedPhone || "");
   const [formState, setFormState] = useState(initialFormState);
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [returnedUserData, setReturnedUserData] = useState(null);
@@ -130,14 +155,20 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
   };
 
   /**
-   * Performs email lookup and toggles returning/new-user UI state.
-   * @param {string} inputEmail - Candidate email from the form.
+   * Performs user lookup by email or phone and toggles returning/new-user UI state.
+   * @param {{ email?: string, phone?: string }} identifier - Lookup identifier.
    * @returns {Promise<void>}
    */
-  const runEmailLookup = async (inputEmail) => {
-    const normalizedEmail = inputEmail.trim().toLowerCase();
+  const runUserLookup = async (identifier) => {
+    const normalizedEmail = identifier.email ? identifier.email.trim().toLowerCase() : "";
+    const normalizedPhone = identifier.phone ? normalizePhone(identifier.phone) : "";
+    const lookupKey = normalizedEmail || normalizedPhone;
 
-    if (!isValidEmailFormat(normalizedEmail)) {
+    const hasValidIdentifier = normalizedEmail
+      ? isValidEmailFormat(normalizedEmail)
+      : isValidPhoneFormat(normalizedPhone);
+
+    if (!hasValidIdentifier) {
       resetEmailLookupState(
         setIsReturningUser,
         setReturnedUserData,
@@ -153,16 +184,19 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
       return;
     }
 
-    if (latestLookupEmailRef.current === normalizedEmail) {
+    if (latestLookupEmailRef.current === lookupKey) {
       return;
     }
 
     const requestId = lookupRequestIdRef.current + 1;
     lookupRequestIdRef.current = requestId;
-    latestLookupEmailRef.current = normalizedEmail;
+    latestLookupEmailRef.current = lookupKey;
 
     try {
-      const lookupResponse = await apiClient.lookupUser(normalizedEmail);
+      const lookupParams = normalizedEmail
+        ? { email: normalizedEmail }
+        : { phone: normalizedPhone };
+      const lookupResponse = await apiClient.lookupUser(lookupParams);
 
       if (lookupRequestIdRef.current !== requestId) {
         return;
@@ -204,24 +238,29 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
         isNeighbor: false
       }));
     } catch (error) {
-      console.error("Email lookup failed", error);
+      console.error("User lookup failed", error);
       if (lookupRequestIdRef.current === requestId) {
-        setErrorMessage(error.message || "Unable to check that email right now");
+        setErrorMessage(error.message || "Unable to check that identifier right now");
       }
     }
   };
 
   /**
-   * Handles blur events on the email field by forcing immediate lookup.
+   * Handles blur events on email or phone fields by forcing immediate lookup.
+   * @param {"email"|"phone"} field - Which field triggered the blur.
    * @returns {Promise<void>}
    */
-  const handleEmailBlur = async () => {
+  const handleIdentifierBlur = async (field) => {
     if (lookupTimeoutRef.current) {
       clearTimeout(lookupTimeoutRef.current);
       lookupTimeoutRef.current = null;
     }
 
-    await runEmailLookup(formState.email);
+    if (field === "email" && formState.email.trim()) {
+      await runUserLookup({ email: formState.email });
+    } else if (field === "phone" && formState.phone.trim()) {
+      await runUserLookup({ phone: formState.phone });
+    }
   };
 
   /**
@@ -241,6 +280,8 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
     setFormState((currentValue) => ({
       ...currentValue,
       name: "",
+      email: "",
+      phone: "",
       profilePhotoUrl: "",
       isNeighbor: false
     }));
@@ -266,6 +307,7 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
 
     try {
       const trimmedEmail = formState.email.trim();
+      const normalizedPhoneValue = normalizePhone(formState.phone);
       const body = {
         eventDate: eventDate ? eventDate.slice(0, 10) : getClosestMondayInputValue(),
         name: formState.name.trim(),
@@ -277,6 +319,10 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
 
       if (trimmedEmail) {
         body.email = trimmedEmail;
+      }
+
+      if (normalizedPhoneValue) {
+        body.phone = normalizedPhoneValue;
       }
 
       if (showNeighborCheckbox) {
@@ -291,6 +337,9 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
 
       if (trimmedEmail) {
         localStorage.setItem(EMAIL_STORAGE_KEY, trimmedEmail);
+      }
+      if (normalizedPhoneValue) {
+        localStorage.setItem(PHONE_STORAGE_KEY, normalizedPhoneValue);
       }
 
       setFormState((currentValue) => ({
@@ -323,8 +372,12 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
     return () => window.removeEventListener("hashchange", focusIfRsvpHash);
   }, []);
 
+  // Debounced lookup for email or phone changes
   useEffect(() => {
-    if (!formState.email.trim()) {
+    const hasEmail = formState.email.trim();
+    const hasPhone = formState.phone.trim();
+
+    if (!hasEmail && !hasPhone) {
       resetEmailLookupState(
         setIsReturningUser,
         setReturnedUserData,
@@ -345,9 +398,12 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
       clearTimeout(lookupTimeoutRef.current);
     }
 
+    // Prefer email lookup when both are present
+    const identifier = hasEmail ? { email: formState.email } : { phone: formState.phone };
+
     lookupTimeoutRef.current = setTimeout(() => {
-      runEmailLookup(formState.email);
-    }, EMAIL_LOOKUP_DEBOUNCE_MS);
+      runUserLookup(identifier);
+    }, LOOKUP_DEBOUNCE_MS);
 
     return () => {
       if (lookupTimeoutRef.current) {
@@ -355,7 +411,7 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
         lookupTimeoutRef.current = null;
       }
     };
-  }, [formState.email, isAuthenticated]);
+  }, [formState.email, formState.phone, isAuthenticated]);
 
   if (cancelled) {
     return (
@@ -390,7 +446,9 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
               <p className="truncate text-sm font-semibold text-pb-ink">
                 {returnedUserData?.name || formState.name || "Returning guest"}
               </p>
-              <p className="truncate text-xs text-pb-driftwood">{formState.email}</p>
+              <p className="truncate text-xs text-pb-driftwood">
+                {formState.email || formState.phone}
+              </p>
             </div>
           </div>
           <button
@@ -422,8 +480,26 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
           </div>
 
           <div className="space-y-2">
+            <label className="block text-sm font-medium" htmlFor="guest-phone">
+              Phone number <span className="text-xs font-normal text-pb-driftwood">(optional)</span>
+            </label>
+            <input
+              autoComplete="tel"
+              className="input-field"
+              id="guest-phone"
+              inputMode="tel"
+              name="phone"
+              onBlur={() => handleIdentifierBlur("phone")}
+              onChange={(event) => setFieldValue("phone", event.target.value)}
+              placeholder="(555) 123-4567"
+              type="tel"
+              value={formState.phone}
+            />
+          </div>
+
+          <div className="space-y-2">
             <label className="block text-sm font-medium" htmlFor="guest-email">
-              Email
+              Email <span className="text-xs font-normal text-pb-driftwood">(optional)</span>
             </label>
             <input
               autoComplete="email"
@@ -431,10 +507,9 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
               id="guest-email"
               inputMode="email"
               name="email"
-              onBlur={handleEmailBlur}
+              onBlur={() => handleIdentifierBlur("email")}
               onChange={(event) => setFieldValue("email", event.target.value)}
               placeholder="your@email.com"
-              required
               type="email"
               value={formState.email}
             />
@@ -474,13 +549,13 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
 
       <div className="space-y-2">
         <label className="block text-sm font-medium" htmlFor="guest-allergies">
-          Allergies
+          Allergies  <span className="text-xs font-normal text-pb-driftwood">(optional)</span>
         </label>
         <input
           className="input-field"
           id="guest-allergies"
           onChange={(event) => setFieldValue("allergies", event.target.value)}
-          placeholder="Any food allergies? (optional)"
+          placeholder="Any food allergies?"
           type="text"
           value={formState.allergies}
         />

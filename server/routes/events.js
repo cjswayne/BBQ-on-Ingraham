@@ -55,7 +55,7 @@ const getOrCreateNextEvent = async () => {
 const serializeEventPayload = async (event) => {
   const [rsvps, pollOptions] = await Promise.all([
     RSVP.find({ eventId: event._id, cancelledAt: null })
-      .populate("userId", "name email profilePhotoUrl isNeighbor")
+      .populate("userId", "name email phone profilePhotoUrl isNeighbor")
       .sort({ createdAt: 1 }),
     ThemePollOption.find({ eventId: event._id }).sort({ createdAt: 1 })
   ]);

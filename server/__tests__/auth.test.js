@@ -111,7 +111,7 @@ describe("auth routes", () => {
         .send({ email: "user@example.com", password: "wrong-password" });
 
       expect(response.status).toBe(401);
-      expect(response.body.error).toMatch(/Invalid email or password/i);
+      expect(response.body.error).toMatch(/Invalid credentials/i);
     });
 
     it("returns a JWT and full user profile with the correct password", async () => {

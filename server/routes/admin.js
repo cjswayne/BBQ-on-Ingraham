@@ -109,7 +109,7 @@ router.get("/stats", requireAdminAccess, async (_request, response, next) => {
     ]);
     const [rsvps, pollOptions] = await Promise.all([
       RSVP.find({ eventId: event._id, cancelledAt: null })
-        .populate("userId", "name email profilePhotoUrl")
+        .populate("userId", "name email phone profilePhotoUrl")
         .sort({ createdAt: 1 }),
       ThemePollOption.find({ eventId: event._id }).sort({ createdAt: 1 })
     ]);

@@ -15,20 +15,32 @@ const router = Router();
 const jwtSecret = process.env.JWT_SECRET || "development-secret";
 const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
+const phoneRegex = /^\+?[1-9]\d{6,14}$/;
+
 const registerSchema = z.object({
-  body: z.object({
-    email: z.string().email(),
-    name: z.string().trim().min(1)
-  }),
+  body: z
+    .object({
+      email: z.string().email().optional(),
+      phone: z.string().regex(phoneRegex, "Invalid phone number").optional(),
+      name: z.string().trim().min(1)
+    })
+    .refine((data) => data.email || data.phone, {
+      message: "Either email or phone is required"
+    }),
   params: z.object({}).optional(),
   query: z.object({}).optional()
 });
 
 const loginSchema = z.object({
-  body: z.object({
-    email: z.string().email(),
-    password: z.string().min(8)
-  }),
+  body: z
+    .object({
+      email: z.string().email().optional(),
+      phone: z.string().regex(phoneRegex, "Invalid phone number").optional(),
+      password: z.string().min(8)
+    })
+    .refine((data) => data.email || data.phone, {
+      message: "Either email or phone is required"
+    }),
   params: z.object({}).optional(),
   query: z.object({}).optional()
 });
@@ -38,6 +50,7 @@ const setPasswordSchema = z
     body: z.object({
       token: z.string().optional(),
       email: z.string().email().optional(),
+      phone: z.string().regex(phoneRegex, "Invalid phone number").optional(),
       password: z.string().min(8),
       confirmPassword: z.string().min(8)
     }),
@@ -53,11 +66,11 @@ const setPasswordSchema = z
       });
     }
 
-    if (!body.token && !body.email) {
+    if (!body.token && !body.email && !body.phone) {
       context.addIssue({
         code: "custom",
         path: ["body"],
-        message: "Either token or email is required"
+        message: "Either token, email, or phone is required"
       });
     }
   });
@@ -65,9 +78,14 @@ const setPasswordSchema = z
 const lookupSchema = z.object({
   body: z.object({}).optional(),
   params: z.object({}).optional(),
-  query: z.object({
-    email: z.string().email()
-  })
+  query: z
+    .object({
+      email: z.string().email().optional(),
+      phone: z.string().optional()
+    })
+    .refine((data) => data.email || data.phone, {
+      message: "Either email or phone is required"
+    })
 });
 
 const profileSchema = z.object({
@@ -116,13 +134,14 @@ const lookupRateLimiter = createRateLimiter(20, "Too many lookup attempts");
 
 /**
  * Serializes user values for auth responses.
- * @param {import("mongoose").Document & {_id: import("mongoose").Types.ObjectId, email: string, name: string, profilePhotoUrl: string, isNeighbor: boolean}} user - User document.
- * @returns {{id: string, email: string, name: string, profilePhotoUrl: string, isNeighbor: boolean}} Serialized user payload.
+ * @param {import("mongoose").Document} user - User document.
+ * @returns {{id: string, email: string|null, phone: string|null, name: string, profilePhotoUrl: string, isNeighbor: boolean}} Serialized user payload.
  */
 const serializeUser = (user) => {
   return {
     id: user._id.toString(),
-    email: user.email,
+    email: user.email || null,
+    phone: user.phone || null,
     name: user.name,
     profilePhotoUrl: user.profilePhotoUrl,
     isNeighbor: user.isNeighbor
@@ -144,34 +163,41 @@ router.post(
   validateRequest(registerSchema),
   async (request, response, next) => {
     try {
-      const { email, name } = request.body;
-      const normalizedEmail = email.trim().toLowerCase();
+      const { email, phone, name } = request.body;
+      const normalizedEmail = email ? email.trim().toLowerCase() : null;
+      const normalizedPhone = phone ? phone.trim() : null;
+
+      // Build query: find by email or phone (whichever is provided)
+      const findQuery = normalizedEmail ? { email: normalizedEmail } : { phone: normalizedPhone };
+      const setOnInsert = { name };
+      if (normalizedEmail) setOnInsert.email = normalizedEmail;
+      if (normalizedPhone) setOnInsert.phone = normalizedPhone;
+
       const user = await User.findOneAndUpdate(
-        { email: normalizedEmail },
-        {
-          $setOnInsert: {
-            email: normalizedEmail,
-            name
-          }
-        },
+        findQuery,
+        { $setOnInsert: setOnInsert },
         { returnDocument: "after", upsert: true }
       );
+
+      // Backfill phone on existing email-only user (or vice versa)
+      if (normalizedPhone && !user.phone) user.phone = normalizedPhone;
+      if (normalizedEmail && !user.email) user.email = normalizedEmail;
+      await user.save();
+
       const token = createJwtToken({
         userId: user._id.toString(),
-        email: user.email
+        email: user.email || undefined,
+        phone: user.phone || undefined
       });
       const passwordSetToken = createPasswordSetToken(user._id.toString());
 
-      await emailService.sendPasswordSetEmail(user.email, passwordSetToken, clientOrigin);
+      if (user.email) {
+        await emailService.sendPasswordSetEmail(user.email, passwordSetToken, clientOrigin);
+      }
 
       response.status(200).json({
         token,
-        user: {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name,
-          profilePhotoUrl: user.profilePhotoUrl
-        }
+        user: serializeUser(user)
       });
     } catch (error) {
       logger.error("Failed to register user", error);
@@ -186,24 +212,29 @@ router.post(
   validateRequest(loginSchema),
   async (request, response, next) => {
     try {
-      const { email, password } = request.body;
-      const normalizedEmail = email.trim().toLowerCase();
-      const user = await User.findOne({ email: normalizedEmail });
+      const { email, phone, password } = request.body;
+
+      // Find user by whichever identifier was provided
+      const findQuery = email
+        ? { email: email.trim().toLowerCase() }
+        : { phone: phone.trim() };
+      const user = await User.findOne(findQuery);
 
       if (!user || !user.passwordHash) {
-        next(createHttpError(401, "Invalid email or password"));
+        next(createHttpError(401, "Invalid credentials"));
         return;
       }
 
       const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
       if (!isPasswordValid) {
-        next(createHttpError(401, "Invalid email or password"));
+        next(createHttpError(401, "Invalid credentials"));
         return;
       }
 
       const token = createJwtToken({
         userId: user._id.toString(),
-        email: user.email
+        email: user.email || undefined,
+        phone: user.phone || undefined
       });
 
       response.status(200).json({
@@ -250,6 +281,14 @@ router.post(
           next(createHttpError(400, "Password already set, use login"));
           return;
         }
+      } else if (request.body.phone) {
+        const normalizedPhone = request.body.phone.trim();
+        user = await User.findOne({ phone: normalizedPhone });
+
+        if (user?.passwordHash) {
+          next(createHttpError(400, "Password already set, use login"));
+          return;
+        }
       }
 
       if (!user) {
@@ -270,9 +309,11 @@ router.post(
 
 router.get("/lookup", lookupRateLimiter, validateRequest(lookupSchema), async (request, response, next) => {
   try {
-    const { email } = request.validated.query;
-    const normalizedEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail });
+    const { email, phone } = request.validated.query;
+    const findQuery = email
+      ? { email: email.trim().toLowerCase() }
+      : { phone: phone.trim() };
+    const user = await User.findOne(findQuery);
 
     if (!user) {
       response.status(200).json({ exists: false });

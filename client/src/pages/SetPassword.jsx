@@ -13,6 +13,7 @@ const SetPassword = () => {
   const { isAuthenticated } = useAuth();
   const token = searchParams.get("token") || "";
   const email = searchParams.get("email") || "";
+  const phone = searchParams.get("phone") || "";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,7 +21,7 @@ const SetPassword = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const hasValidParams = Boolean(token || email);
+  const hasValidParams = Boolean(token || email || phone);
 
   /**
    * Validates form inputs before calling API.
@@ -58,8 +59,10 @@ const SetPassword = () => {
     try {
       if (token) {
         await apiClient.setPassword(token, password, confirmPassword);
-      } else {
+      } else if (email) {
         await apiClient.setPasswordByEmail(email, password, confirmPassword);
+      } else {
+        await apiClient.setPasswordByPhone(phone, password, confirmPassword);
       }
 
       setIsSuccess(true);

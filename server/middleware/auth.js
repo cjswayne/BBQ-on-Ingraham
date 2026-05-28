@@ -23,11 +23,14 @@ const respondUnauthorized = (response, message) => {
 
 /**
  * Creates a signed JWT from a user identity payload.
- * @param {{userId: string, email: string}} payload - User identity values for token claims.
+ * @param {{userId: string, email?: string, phone?: string}} payload - User identity values for token claims.
  * @returns {string} Signed JWT token.
  */
-export const createJwtToken = ({ userId, email }) => {
-  return jwt.sign({ userId, email }, jwtSecret, { expiresIn: jwtExpiresIn });
+export const createJwtToken = ({ userId, email, phone }) => {
+  const claims = { userId };
+  if (email) claims.email = email;
+  if (phone) claims.phone = phone;
+  return jwt.sign(claims, jwtSecret, { expiresIn: jwtExpiresIn });
 };
 
 /**
@@ -50,7 +53,8 @@ export const requireAuth = (request, response, next) => {
 
     request.user = {
       userId: decodedToken.userId,
-      email: decodedToken.email
+      email: decodedToken.email || null,
+      phone: decodedToken.phone || null
     };
     next();
   } catch (error) {
@@ -80,7 +84,8 @@ export const optionalAuth = (request, _response, next) => {
 
     request.user = {
       userId: decodedToken.userId,
-      email: decodedToken.email
+      email: decodedToken.email || null,
+      phone: decodedToken.phone || null
     };
   } catch (error) {
     logger.error("Optional JWT verification failed", error);

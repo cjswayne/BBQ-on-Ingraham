@@ -4,11 +4,14 @@ const userSchema = new mongoose.Schema(
   {
     email: {
       type: String,
-      required: true,
-      unique: true,
-      index: true,
       trim: true,
-      lowercase: true
+      lowercase: true,
+      default: null
+    },
+    phone: {
+      type: String,
+      trim: true,
+      default: null
     },
     name: {
       type: String,
@@ -41,5 +44,9 @@ const userSchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
+// Unique when present, null values are allowed (sparse)
+userSchema.index({ email: 1 }, { unique: true, sparse: true });
+userSchema.index({ phone: 1 }, { unique: true, sparse: true });
 
 export const User = mongoose.models.User || mongoose.model("User", userSchema);

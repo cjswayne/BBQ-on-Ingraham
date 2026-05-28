@@ -284,7 +284,12 @@ const Profile = () => {
 
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold text-pb-ocean">{user?.name || "Your profile"}</h1>
-            <p className="text-sm text-pb-driftwood">{user?.email || "No email"}</p>
+            {user?.phone ? (
+              <p className="text-sm text-pb-driftwood">{user.phone}</p>
+            ) : null}
+            {user?.email ? (
+              <p className="text-sm text-pb-driftwood">{user.email}</p>
+            ) : null}
             {user?.isNeighbor ? (
               <span className="inline-flex rounded-full bg-pb-palm/15 px-3 py-1 text-xs font-medium text-pb-palm">
                 Neighbor

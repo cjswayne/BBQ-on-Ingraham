@@ -63,15 +63,15 @@ export const adminSession = {
 };
 
 export const apiClient = {
-  register: (email, name) =>
+  register: ({ email, phone, name }) =>
     request("/api/auth/register", {
       method: "POST",
-      body: { email, name }
+      body: { email, phone, name }
     }),
-  login: (email, password) =>
+  login: ({ email, phone, password }) =>
     request("/api/auth/login", {
       method: "POST",
-      body: { email, password }
+      body: { email, phone, password }
     }),
   setPassword: (token, password, confirmPassword) =>
     request("/api/auth/set-password", {
@@ -83,8 +83,17 @@ export const apiClient = {
       method: "POST",
       body: { email, password, confirmPassword }
     }),
-  lookupUser: (email) =>
-    request(`/api/auth/lookup?email=${encodeURIComponent(email)}`),
+  setPasswordByPhone: (phone, password, confirmPassword) =>
+    request("/api/auth/set-password", {
+      method: "POST",
+      body: { phone, password, confirmPassword }
+    }),
+  lookupUser: ({ email, phone }) => {
+    const params = new URLSearchParams();
+    if (email) params.set("email", email);
+    if (phone) params.set("phone", phone);
+    return request(`/api/auth/lookup?${params.toString()}`);
+  },
   uploadMedia: (body) =>
     request("/api/media", {
       method: "POST",

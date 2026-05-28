@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "migrate:drop-phone-index": "node scripts/migrate-drop-phone-index.js",
+    "migrate:drop-phone-index:dry-run": "node scripts/migrate-drop-phone-index.js --dry-run"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

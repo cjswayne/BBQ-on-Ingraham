@@ -18,12 +18,14 @@ import { emailService } from "../services/emailService.js";
 const router = Router();
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+const phoneRegex = /^\+?[1-9]\d{6,14}$/;
 
 const createRsvpSchema = z.object({
   body: z.object({
     eventDate: z.string().trim().regex(dateRegex).optional(),
     name: z.string().trim().min(1).optional(),
     email: z.string().email().optional(),
+    phone: z.string().regex(phoneRegex, "Invalid phone number").optional(),
     food: z.string().trim().optional().default(""),
     allergies: z.string().trim().optional().default(""),
     guestCount: z.coerce.number().int().min(1),
@@ -128,21 +130,32 @@ router.post(
       let user = null;
       let token = null;
 
-      if (!request.user && request.body.email) {
+      const normalizedEmail = request.body.email ? request.body.email.trim().toLowerCase() : null;
+      const normalizedPhone = request.body.phone ? request.body.phone.trim() : null;
+      const hasIdentifier = normalizedEmail || normalizedPhone;
+
+      if (!request.user && hasIdentifier) {
+        // Build upsert query from whichever identifier is provided
+        const findQuery = normalizedEmail
+          ? { email: normalizedEmail }
+          : { phone: normalizedPhone };
+        const setOnInsert = { name: request.body.name || "" };
+        if (normalizedEmail) setOnInsert.email = normalizedEmail;
+        if (normalizedPhone) setOnInsert.phone = normalizedPhone;
+
         user = await User.findOneAndUpdate(
-          { email: request.body.email },
-          {
-            $setOnInsert: {
-              email: request.body.email,
-              name: request.body.name || ""
-            }
-          },
+          findQuery,
+          { $setOnInsert: setOnInsert },
           { upsert: true, returnDocument: "after" }
         );
 
         if (request.body.name && user.name !== request.body.name) {
           user.name = request.body.name;
         }
+
+        // Backfill phone/email on existing users
+        if (normalizedPhone && !user.phone) user.phone = normalizedPhone;
+        if (normalizedEmail && !user.email) user.email = normalizedEmail;
 
         if (request.body.profilePhotoUrl) {
           user.profilePhotoUrl = request.body.profilePhotoUrl;
@@ -156,12 +169,14 @@ router.post(
 
         token = createJwtToken({
           userId: user._id.toString(),
-          email: user.email
+          email: user.email || undefined,
+          phone: user.phone || undefined
         });
         isGuest = false;
         request.user = {
           userId: user._id.toString(),
-          email: user.email
+          email: user.email || null,
+          phone: user.phone || null
         };
       }
 
@@ -230,7 +245,7 @@ router.post(
           await emailService.sendRSVPNotification(
             {
               attendeeName,
-              email: user?.email || "Guest RSVP",
+              email: user?.email || user?.phone || "Guest RSVP",
               food: request.body.food,
               guestCount: request.body.guestCount,
               eventDateLabel: getEventDateLabel(event.date),
