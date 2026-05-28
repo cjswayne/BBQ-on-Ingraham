@@ -35,6 +35,8 @@ const setStaticAssetHeaders = (response, filePath) => {
 
 const app = express();
 
+// Render deploys behind a reverse proxy that sets X-Forwarded-For
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
 app.use(

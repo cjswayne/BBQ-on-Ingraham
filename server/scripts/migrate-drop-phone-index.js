@@ -9,8 +9,16 @@
  *   node server/scripts/migrate-drop-phone-index.js [--dry-run] [--test]
  */
 
-import "dotenv/config";
+import dotenv from "dotenv";
 import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load root .env (two levels up from server/scripts/)
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const args = process.argv.slice(2);
 const isDryRun = args.includes("--dry-run");

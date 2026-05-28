@@ -8,7 +8,9 @@
     "start": "node server.js",
     "test": "vitest run",
     "migrate:drop-phone-index": "node scripts/migrate-drop-phone-index.js",
-    "migrate:drop-phone-index:dry-run": "node scripts/migrate-drop-phone-index.js --dry-run"
+    "migrate:drop-phone-index:dry-run": "node scripts/migrate-drop-phone-index.js --dry-run",
+    "migrate:drop-email-index": "node scripts/migrate-drop-email-index.js",
+    "migrate:drop-email-index:dry-run": "node scripts/migrate-drop-email-index.js --dry-run"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
