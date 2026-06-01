@@ -519,7 +519,7 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
             className="input-field"
             id="guest-food-custom"
             onChange={(event) => setFieldValue("foodCustom", event.target.value)}
-            placeholder="Describe what you're bringing..."
+            placeholder="Describe what you're bringing (not beer)..."
             type="text"
             value={formState.foodCustom}
           />

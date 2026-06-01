@@ -186,7 +186,7 @@ export const EditRSVPModal = ({ rsvp, onClose, onSave, onCancel }) => {
             <input
               className="input-field"
               onChange={(event) => setFoodCustom(event.target.value)}
-              placeholder="Describe what you're bringing..."
+              placeholder="Describe what you're bringing (not beer)..."
               type="text"
               value={foodCustom}
             />
