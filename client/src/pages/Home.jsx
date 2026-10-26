@@ -98,8 +98,12 @@ const HeroContent = ({ eventDate }) => {
             <path d="M9 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
           </svg>
           <div>
-            <p className="font-medium leading-none">1st &amp; 3rd Mondays</p>
-            <p className="mt-1 text-xs opacity-70">8–11pm</p>
+            <p className="font-medium leading-none">On Mondays</p>
+            <p className="mt-1 text-xs opacity-70">8-11pm</p>
+            <p className="mt-1 text-xs opacity-70">
+              Contact us for more info at{" "}
+              <a className="underline hover:opacity-100" href="tel:+12197073336">(219) 707-3336</a>
+            </p>
           </div>
         </div>
 
