@@ -27,42 +27,18 @@ const extractPacificParts = (date = new Date()) => {
   }, {});
 };
 
+// Returns the upcoming Monday (today if it is Monday) as an input value
 export const getClosestMondayInputValue = (date = new Date()) => {
   const pacificParts = extractPacificParts(date);
-  const todayYear = Number(pacificParts.year);
-  const todayMonth = Number(pacificParts.month);
-  const todayDay = Number(pacificParts.day);
-  const todayNum = todayYear * 10000 + todayMonth * 100 + todayDay;
+  const weekdayIdx = WEEKDAY_INDEX[pacificParts.weekday] ?? 0;
+  const daysUntilMonday = weekdayIdx === 1 ? 0 : (8 - weekdayIdx) % 7;
+  const monday = new Date(
+    Date.UTC(Number(pacificParts.year), Number(pacificParts.month) - 1, Number(pacificParts.day))
+  );
 
-  // Returns the day-of-month for the 1st Monday in the given year/month
-  const getFirstMondayDay = (y, m) => {
-    const probe = new Date(Date.UTC(y, m - 1, 1));
-    const parts = extractPacificParts(probe);
-    const idx = WEEKDAY_INDEX[parts.weekday] ?? 0;
-    return 1 + (idx === 1 ? 0 : (8 - idx) % 7);
-  };
+  monday.setUTCDate(monday.getUTCDate() + daysUntilMonday);
 
-  // Build ISO date string from year/month/day integers
-  const toInputValue = (y, m, d) =>
-    `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-
-  // Check 1st and 3rd Monday of current month, then 1st of next month
-  const firstDay = getFirstMondayDay(todayYear, todayMonth);
-  const candidates = [
-    { year: todayYear, month: todayMonth, day: firstDay },
-    { year: todayYear, month: todayMonth, day: firstDay + 14 }
-  ];
-
-  for (const c of candidates) {
-    const cNum = c.year * 10000 + c.month * 100 + c.day;
-    if (todayNum <= cNum) return toInputValue(c.year, c.month, c.day);
-  }
-
-  // Both event Mondays this month have passed — use 1st Monday of next month
-  const nextMonth = todayMonth === 12 ? 1 : todayMonth + 1;
-  const nextYear = todayMonth === 12 ? todayYear + 1 : todayYear;
-  const nextFirstDay = getFirstMondayDay(nextYear, nextMonth);
-  return toInputValue(nextYear, nextMonth, nextFirstDay);
+  return monday.toISOString().slice(0, 10);
 };
 
 // Returns a "YYYY-MM-DD" string for the given date in Pacific time
