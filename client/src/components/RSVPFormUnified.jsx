@@ -96,11 +96,13 @@ const getNameInitial = (name) => {
  * Renders a unified RSVP form for guest and returning-email workflows.
  * @param {object} props - Component props.
  * @param {boolean} props.cancelled - Indicates whether RSVP is closed.
+ * @param {boolean} props.isFull - Indicates the weekly head count cap has been reached.
+ * @param {number} props.maxHeadCount - Weekly head count cap shown when full.
  * @param {(body: object) => Promise<object|void>} props.onSubmit - Submit handler provided by parent component.
  * @param {string} props.eventDate - Optional event date to include in the payload.
  * @returns {JSX.Element} RSVP form content.
  */
-export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
+export const RSVPFormUnified = ({ cancelled = false, isFull = false, maxHeadCount = 20, onSubmit, eventDate }) => {
   const { storedEmail, storedPhone, isAuthenticated, login } = useAuth();
   const initialFormState = createInitialFormState(storedEmail || "", storedPhone || "");
   const [formState, setFormState] = useState(initialFormState);
@@ -413,6 +415,18 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
       <div id="rsvp" className="surface-card space-y-2 p-5 opacity-60">
         <h2 className="text-lg font-semibold text-pb-ocean">RSVP</h2>
         <p className="text-sm text-pb-driftwood">RSVPs are closed — this event is not happening.</p>
+      </div>
+    );
+  }
+
+  if (isFull) {
+    return (
+      <div id="rsvp" className="surface-card space-y-2 p-5">
+        <h2 className="text-lg font-semibold text-pb-ocean">RSVP</h2>
+        <p className="text-sm text-pb-driftwood">
+          This week is full ({maxHeadCount} people max). Contact us at{" "}
+          <a className="underline" href="tel:+12197073336">(219) 707-3336</a> to get on the list.
+        </p>
       </div>
     );
   }

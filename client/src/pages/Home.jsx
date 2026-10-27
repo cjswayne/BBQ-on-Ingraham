@@ -429,7 +429,7 @@ const Home = () => {
                 People coming
               </h2>
               <p className="mt-2 text-lg font-medium text-pb-ocean">
-                {eventData?.rsvps?.length || 0} cool neighbors attending
+                {eventData?.event?.headCount ?? 0} / {eventData?.event?.maxHeadCount ?? 20} spots filled
               </p>
             </div>
           </div>
@@ -498,6 +498,11 @@ const Home = () => {
             <RSVPFormUnified
               cancelled={eventData?.event?.cancelled ?? false}
               eventDate={eventData?.event?.date}
+              isFull={
+                Boolean(eventData?.event) &&
+                eventData.event.headCount >= eventData.event.maxHeadCount
+              }
+              maxHeadCount={eventData?.event?.maxHeadCount ?? 20}
               onSubmit={handleSubmit}
             />
           </div>

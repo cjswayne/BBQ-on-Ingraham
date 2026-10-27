@@ -12,6 +12,7 @@ import {
   getNextMonday,
   getPacificMidnightUtcDate
 } from "../utils/dateUtils.js";
+import { MAX_HEAD_COUNT, exceedsHeadCount } from "../utils/headCount.js";
 import { logger } from "../utils/logger.js";
 import { emailService } from "../services/emailService.js";
 
@@ -70,6 +71,8 @@ const parseSelectedEventDate = (eventDateValue) => {
 
   return getPacificMidnightUtcDate(year, month, day);
 };
+
+const fullEventMessage = `This week's BBQ is full (max ${MAX_HEAD_COUNT} people). Contact us at (219) 707-3336 to get on the list.`;
 
 const getOrCreateEvent = async (eventDate) => {
   return Event.findOneAndUpdate(
@@ -205,6 +208,21 @@ router.post(
 
         await user.save();
 
+        const existingRsvp = await RSVP.findOne({
+          eventId: event._id,
+          userId: user._id,
+          cancelledAt: null
+        });
+
+        if (
+          await exceedsHeadCount(event._id, request.body.guestCount, {
+            excludeRsvpId: existingRsvp?._id
+          })
+        ) {
+          next(createHttpError(409, fullEventMessage));
+          return;
+        }
+
         rsvp = await RSVP.findOneAndUpdate(
           {
             eventId: event._id,
@@ -228,6 +246,11 @@ router.post(
           }
         );
       } else {
+        if (await exceedsHeadCount(event._id, request.body.guestCount)) {
+          next(createHttpError(409, fullEventMessage));
+          return;
+        }
+
         rsvp = await RSVP.create({
           eventId: event._id,
           guestName: attendeeName,
@@ -309,6 +332,26 @@ router.put(
   validateRequest(updateRsvpSchema),
   async (request, response, next) => {
     try {
+      const existingRsvp = await RSVP.findOne({
+        _id: request.params.id,
+        userId: request.user.userId,
+        cancelledAt: null
+      });
+
+      if (!existingRsvp) {
+        next(createHttpError(404, "RSVP not found"));
+        return;
+      }
+
+      if (
+        await exceedsHeadCount(existingRsvp.eventId, request.body.guestCount, {
+          excludeRsvpId: existingRsvp._id
+        })
+      ) {
+        next(createHttpError(409, fullEventMessage));
+        return;
+      }
+
       const rsvp = await RSVP.findOneAndUpdate(
         {
           _id: request.params.id,
