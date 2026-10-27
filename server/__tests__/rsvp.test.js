@@ -116,4 +116,75 @@ describe("rsvp routes", () => {
     expect(user).not.toBeNull();
     expect(user.name).toBe("Taylor");
   });
+
+  it("blocks new RSVPs once the 20 person cap is reached", async () => {
+    const fillResponse = await request(app).post("/api/rsvps").send({
+      eventDate: "2026-04-20",
+      name: "Big Group",
+      guestCount: 19
+    });
+    expect(fillResponse.status).toBe(201);
+
+    const lastSpot = await request(app).post("/api/rsvps").send({
+      eventDate: "2026-04-20",
+      name: "Last Spot",
+      guestCount: 1
+    });
+    expect(lastSpot.status).toBe(201);
+
+    const overCap = await request(app).post("/api/rsvps").send({
+      eventDate: "2026-04-20",
+      name: "Too Late",
+      guestCount: 1
+    });
+    expect(overCap.status).toBe(409);
+    expect(overCap.body.error).toMatch(/full/);
+  });
+
+  it("lets an existing attendee re-RSVP without counting them twice", async () => {
+    await request(app).post("/api/rsvps").send({
+      eventDate: "2026-04-20",
+      name: "Big Group",
+      guestCount: 18
+    });
+
+    const user = await User.create({ email: "sam@example.com", name: "Sam" });
+    const token = createJwtToken({ userId: user._id.toString(), email: user.email });
+    const send = (guestCount) =>
+      request(app)
+        .post("/api/rsvps")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ eventDate: "2026-04-20", name: "Sam", guestCount });
+
+    expect((await send(2)).status).toBe(201);
+    expect((await send(2)).status).toBe(201);
+    expect((await send(3)).status).toBe(409);
+  });
+
+  it("blocks an RSVP edit that would push the head count over the cap", async () => {
+    await request(app).post("/api/rsvps").send({
+      eventDate: "2026-04-20",
+      name: "Big Group",
+      guestCount: 18
+    });
+
+    const user = await User.create({ email: "kim@example.com", name: "Kim" });
+    const token = createJwtToken({ userId: user._id.toString(), email: user.email });
+    const created = await request(app)
+      .post("/api/rsvps")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ eventDate: "2026-04-20", name: "Kim", guestCount: 1 });
+
+    const okEdit = await request(app)
+      .put(`/api/rsvps/${created.body.rsvp.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ food: "Corn", guestCount: 2 });
+    expect(okEdit.status).toBe(200);
+
+    const overEdit = await request(app)
+      .put(`/api/rsvps/${created.body.rsvp.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ food: "Corn", guestCount: 3 });
+    expect(overEdit.status).toBe(409);
+  });
 });

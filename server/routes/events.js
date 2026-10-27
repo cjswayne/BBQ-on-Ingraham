@@ -9,6 +9,7 @@ import { RSVP } from "../models/RSVP.js";
 import { ThemePollOption } from "../models/ThemePollOption.js";
 import { createHttpError } from "../middleware/errorHandler.js";
 import { getNextMonday } from "../utils/dateUtils.js";
+import { MAX_HEAD_COUNT } from "../utils/headCount.js";
 import { logger } from "../utils/logger.js";
 
 const router = Router();
@@ -66,7 +67,9 @@ const serializeEventPayload = async (event) => {
       date: event.date,
       theme: event.theme,
       themePollActive: event.themePollActive,
-      cancelled: event.cancelled ?? false
+      cancelled: event.cancelled ?? false,
+      headCount: rsvps.reduce((total, rsvp) => total + rsvp.guestCount, 0),
+      maxHeadCount: MAX_HEAD_COUNT
     },
     rsvps: rsvps.map((rsvp) => ({
       id: rsvp._id.toString(),
