@@ -100,7 +100,15 @@ const getNameInitial = (name) => {
  * @param {string} props.eventDate - Optional event date to include in the payload.
  * @returns {JSX.Element} RSVP form content.
  */
-export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
+export const RSVPFormUnified = ({
+  cancelled = false,
+  onSubmit,
+  eventDate,
+  eventSlug,
+  foodCategories = FOOD_CATEGORIES,
+  foodPlaceholder = "Describe what you're bringing (not beer)...",
+  submitLabel = "RSVP"
+}) => {
   const { storedEmail, storedPhone, isAuthenticated, login } = useAuth();
   const initialFormState = createInitialFormState(storedEmail || "", storedPhone || "");
   const [formState, setFormState] = useState(initialFormState);
@@ -304,7 +312,9 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
       const trimmedEmail = formState.email.trim();
       const normalizedPhoneValue = normalizePhone(formState.phone);
       const body = {
-        eventDate: eventDate ? eventDate.slice(0, 10) : getClosestMondayInputValue(),
+        ...(eventSlug
+          ? { eventSlug }
+          : { eventDate: eventDate ? eventDate.slice(0, 10) : getClosestMondayInputValue() }),
         name: formState.name.trim(),
         food: resolvedFood,
         allergies: formState.allergies.trim(),
@@ -519,13 +529,13 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
             className="input-field"
             id="guest-food-custom"
             onChange={(event) => setFieldValue("foodCustom", event.target.value)}
-            placeholder="Describe what you're bringing (not beer)..."
+            placeholder={foodPlaceholder}
             type="text"
             value={formState.foodCustom}
           />
         ) : null}
         <div className="flex flex-wrap gap-1.5">
-          {FOOD_CATEGORIES.map((category) => (
+          {foodCategories.map((category) => (
             <button
               className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                 formState.foodCategory === category
@@ -585,7 +595,7 @@ export const RSVPFormUnified = ({ cancelled = false, onSubmit, eventDate }) => {
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting ? "RSVP-ing..." : "RSVP"}
+        {isSubmitting ? "RSVP-ing..." : submitLabel}
       </button>
     </form>
   );

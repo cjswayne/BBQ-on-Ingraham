@@ -8,6 +8,8 @@ import { Event } from "../models/Event.js";
 import { RSVP } from "../models/RSVP.js";
 import { User } from "../models/User.js";
 import { createHttpError } from "../middleware/errorHandler.js";
+import { getSpecialEventConfig } from "../config/specialEvents.js";
+import { getOrCreateSpecialEvent } from "./events.js";
 import {
   getNextMonday,
   getPacificMidnightUtcDate
@@ -23,6 +25,7 @@ const phoneRegex = /^\+?[1-9]\d{6,14}$/;
 const createRsvpSchema = z.object({
   body: z.object({
     eventDate: z.string().trim().regex(dateRegex).optional(),
+    eventSlug: z.string().trim().min(1).optional(),
     name: z.string().trim().min(1).optional(),
     email: z.string().email().optional(),
     phone: z.string().regex(phoneRegex, "Invalid phone number").optional(),
@@ -115,8 +118,21 @@ router.post(
   validateRequest(createRsvpSchema),
   async (request, response, next) => {
     try {
-      const eventDate = parseSelectedEventDate(request.body.eventDate);
-      const event = await getOrCreateEvent(eventDate);
+      let event = null;
+      let specialConfig = null;
+
+      if (request.body.eventSlug) {
+        specialConfig = getSpecialEventConfig(request.body.eventSlug);
+        event = await getOrCreateSpecialEvent(request.body.eventSlug);
+
+        if (!event) {
+          next(createHttpError(404, "Event not found"));
+          return;
+        }
+      } else {
+        const eventDate = parseSelectedEventDate(request.body.eventDate);
+        event = await getOrCreateEvent(eventDate);
+      }
 
       if (event.cancelled) {
         next(createHttpError(400, "This event has been cancelled"));
@@ -248,7 +264,9 @@ router.post(
               email: user?.email || user?.phone || "Guest RSVP",
               food: request.body.food,
               guestCount: request.body.guestCount,
-              eventDateLabel: getEventDateLabel(event.date),
+              eventDateLabel: specialConfig
+                ? `${specialConfig.title} (${getEventDateLabel(event.date)}, ${specialConfig.timeLabel})`
+                : getEventDateLabel(event.date),
               profilePhotoUrl: user?.profilePhotoUrl || profilePhotoUrl,
               isGuest
             },

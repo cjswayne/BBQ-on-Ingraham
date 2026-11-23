@@ -9,7 +9,12 @@ import { ThemePoll } from "../components/ThemePoll.jsx";
 import { VideoHero } from "../components/VideoHero.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useAdminMode } from "../hooks/useAdminMode.js";
+import { Link } from "react-router-dom";
+
 import { formatEventDateLabel } from "../utils/date.js";
+
+// Thanksgiving on Ingraham promo shows on the home page until the day after the event
+const THANKSGIVING_PROMO_ENDS = new Date("2026-11-27T08:00:00Z");
 
 const AVATAR_COLORS = [
   "#FF4136",
@@ -34,7 +39,7 @@ const hashNameToIndex = (name = "") => {
 };
 
 // Assign colors so no two adjacent RSVPs share the same color
-const assignAvatarColors = (rsvps = []) => {
+export const assignAvatarColors = (rsvps = []) => {
   const colors = [];
   for (let i = 0; i < rsvps.length; i++) {
     let idx = hashNameToIndex(rsvps[i].attendeeName);
@@ -395,6 +400,26 @@ const Home = () => {
           </div>
         )}
 
+
+        {new Date() < THANKSGIVING_PROMO_ENDS ? (
+          <Link
+            className="flex items-center justify-between gap-4 rounded-[1.25rem] border px-5 py-4 shadow-sm transition hover:brightness-105"
+            style={{ background: "linear-gradient(135deg, #FBF3E4, #F0CFA0)", borderColor: "#C2571A33" }}
+            to="/thanksgiving"
+          >
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "#C2571A" }}>
+                Special event
+              </p>
+              <p className="mt-1 text-base font-semibold" style={{ color: "#8C2F1C" }}>
+                Thanksgiving on Ingraham, Wed Nov 26 at 5pm
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full px-4 py-2 text-sm font-medium text-white" style={{ backgroundColor: "#C2571A" }}>
+              RSVP
+            </span>
+          </Link>
+        ) : null}
 
         {/* Hero info rendered as a standard surface-card in the content flow */}
         <section className="surface-card overflow-hidden text-center">

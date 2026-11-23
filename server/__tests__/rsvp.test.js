@@ -21,6 +21,7 @@ const rsvpRouter = (await import("../routes/rsvp.js")).default;
 const { createJwtToken } = await import("../middleware/auth.js");
 const { RSVP } = await import("../models/RSVP.js");
 const { User } = await import("../models/User.js");
+const { Event } = await import("../models/Event.js");
 
 const buildTestApp = () => {
   const app = express();
@@ -115,5 +116,39 @@ describe("rsvp routes", () => {
     const user = await User.findOne({ email: "taylor@example.com" });
     expect(user).not.toBeNull();
     expect(user.name).toBe("Taylor");
+  });
+
+  it("stores Thanksgiving RSVPs on their own event, apart from Monday RSVPs", async () => {
+    const mondayResponse = await request(app).post("/api/rsvps").send({
+      eventDate: "2026-11-23",
+      name: "Monday Guest",
+      food: "Side",
+      guestCount: 1
+    });
+    const thanksgivingResponse = await request(app).post("/api/rsvps").send({
+      eventSlug: "thanksgiving",
+      name: "Turkey Fan",
+      food: "Dessert",
+      guestCount: 1
+    });
+
+    expect(mondayResponse.status).toBe(201);
+    expect(thanksgivingResponse.status).toBe(201);
+    expect(thanksgivingResponse.body.rsvp.eventId).not.toBe(mondayResponse.body.rsvp.eventId);
+
+    const thanksgivingEvent = await Event.findOne({ slug: "thanksgiving" });
+    expect(thanksgivingEvent.title).toBe("Thanksgiving on Ingraham");
+    expect(thanksgivingEvent.date.toISOString()).toBe("2026-11-26T08:00:00.000Z");
+    expect(await RSVP.countDocuments({ eventId: thanksgivingEvent._id })).toBe(1);
+  });
+
+  it("rejects RSVPs for an unknown special event", async () => {
+    const response = await request(app).post("/api/rsvps").send({
+      eventSlug: "not-an-event",
+      name: "Someone",
+      guestCount: 1
+    });
+
+    expect(response.status).toBe(404);
   });
 });
