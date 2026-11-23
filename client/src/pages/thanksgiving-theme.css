@@ -49,9 +49,13 @@
 .thanksgiving-theme .bg-pb-grape\/10 { background-color: color-mix(in srgb, #8C2F1C 10%, transparent); }
 
 .thanksgiving-theme .surface-card {
-  background: rgba(251, 243, 228, 0.9);
-  border-color: rgba(194, 87, 26, 0.22);
-  box-shadow: 0 18px 38px rgba(107, 58, 31, 0.12);
+  /* Harvest stripe on top (cranberry to gold), then the same warm gradient as the hero. */
+  background:
+    linear-gradient(90deg, #8C2F1C 0%, #C2571A 50%, #D9A441 100%) top / 100% 4px no-repeat,
+    linear-gradient(135deg, #FBF3E4 0%, #F6E2C2 55%, #F0CFA0 100%);
+  border-color: rgba(194, 87, 26, 0.2);
+  box-shadow: 0 20px 40px rgba(74, 46, 27, 0.28);
+  backdrop-filter: none;
 }
 
 .thanksgiving-theme .input-field {
