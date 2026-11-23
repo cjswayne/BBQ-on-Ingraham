@@ -99,6 +99,7 @@ const getNameInitial = (name) => {
  * @param {(body: object) => Promise<object|void>} props.onSubmit - Submit handler provided by parent component.
  * @param {string} props.eventDate - Optional event date to include in the payload.
  * @param {boolean} props.scrollFoodChips - Shows the dish choices on one line that scrolls sideways.
+ * @param {boolean} props.foodCategoriesLoading - Shows placeholder chips while the dish choices load.
  * @returns {JSX.Element} RSVP form content.
  */
 export const RSVPFormUnified = ({
@@ -109,6 +110,7 @@ export const RSVPFormUnified = ({
   foodCategories = FOOD_CATEGORIES,
   foodPlaceholder = "Describe what you're bringing (not beer)...",
   scrollFoodChips = false,
+  foodCategoriesLoading = false,
   submitLabel = "RSVP"
 }) => {
   const { storedEmail, storedPhone, isAuthenticated, login } = useAuth();
@@ -543,7 +545,16 @@ export const RSVPFormUnified = ({
               : "flex flex-wrap gap-1.5"
           }
         >
-          {foodCategories.map((category) => (
+          {foodCategoriesLoading
+            ? ["w-16", "w-20", "w-24", "w-28", "w-20", "w-24"].map((width, index) => (
+                <div
+                  aria-hidden="true"
+                  className={`skeleton-block h-8 shrink-0 !rounded-full ${width}`}
+                  key={index}
+                />
+              ))
+            : null}
+          {(foodCategoriesLoading ? [] : foodCategories).map((category) => (
             <button
               className={`${scrollFoodChips ? "shrink-0 snap-start whitespace-nowrap " : ""}rounded-full px-3 py-1 text-xs font-medium transition ${
                 formState.foodCategory === category

@@ -104,3 +104,25 @@ img {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   animation: neighbor-swish 3s ease-in-out infinite;
 }
+
+/* Loading placeholder with a soft shimmer. Tints follow the page palette. */
+.skeleton-block {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-pb-driftwood) 12%, transparent) 25%,
+    color-mix(in srgb, var(--color-pb-driftwood) 22%, transparent) 37%,
+    color-mix(in srgb, var(--color-pb-driftwood) 12%, transparent) 63%
+  );
+  background-size: 400% 100%;
+  border-radius: 0.5rem;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block { animation: none; }
+}
