@@ -1,0 +1,68 @@
+/* Thanksgiving palette, applied to the whole page while /thanksgiving is open
+   (the body gets .thanksgiving-theme). Overrides the BBQ palette utilities. */
+.thanksgiving-theme {
+  --color-pb-ocean: #6B3A1F;
+  --color-pb-palm: #C2571A;
+  --color-pb-driftwood: #8A5A2B;
+  --color-pb-sand: #E9D3A8;
+  --color-pb-ink: #4A2E1B;
+  --color-pb-cream: #FBF3E4;
+  --color-pb-mist: #FDF6EA;
+  --color-pb-grape: #8C2F1C;
+  --color-pb-seafoam: #A67C3D;
+  --color-pb-coral: #B5381F;
+  --color-pb-lavender: #E2C9A0;
+  --color-pb-neon: #8C2F1C;
+  background-color: #E9D3A8;
+}
+
+.thanksgiving-theme .bg-pb-mist { background-color: #FDF6EA; }
+.thanksgiving-theme .bg-pb-ocean { background-color: #6B3A1F; }
+.thanksgiving-theme .bg-pb-palm { background-color: #C2571A; }
+.thanksgiving-theme .bg-pb-palm\/10 { background-color: color-mix(in srgb, #C2571A 10%, transparent); }
+.thanksgiving-theme .bg-pb-palm\/30 { background-color: color-mix(in srgb, #C2571A 30%, transparent); }
+.thanksgiving-theme .bg-pb-palm\/5 { background-color: color-mix(in srgb, #C2571A 5%, transparent); }
+.thanksgiving-theme .bg-pb-sand\/60 { background-color: color-mix(in srgb, #E9D3A8 60%, transparent); }
+.thanksgiving-theme .bg-pb-sand\/40 { background-color: color-mix(in srgb, #E9D3A8 40%, transparent); }
+.thanksgiving-theme .bg-pb-cream { background-color: #FBF3E4; }
+.thanksgiving-theme .border-pb-driftwood { border-color: #8A5A2B; }
+.thanksgiving-theme .border-pb-driftwood\/10 { border-color: color-mix(in srgb, #8A5A2B 10%, transparent); }
+.thanksgiving-theme .border-pb-driftwood\/30 { border-color: color-mix(in srgb, #8A5A2B 30%, transparent); }
+.thanksgiving-theme .border-pb-driftwood\/20 { border-color: color-mix(in srgb, #8A5A2B 20%, transparent); }
+.thanksgiving-theme .border-pb-ocean\/15 { border-color: color-mix(in srgb, #6B3A1F 15%, transparent); }
+.thanksgiving-theme .border-pb-ocean\/20 { border-color: color-mix(in srgb, #6B3A1F 20%, transparent); }
+.thanksgiving-theme .border-pb-ocean\/30 { border-color: color-mix(in srgb, #6B3A1F 30%, transparent); }
+.thanksgiving-theme .border-pb-palm\/30 { border-color: color-mix(in srgb, #C2571A 30%, transparent); }
+.thanksgiving-theme .border-pb-palm\/40 { border-color: color-mix(in srgb, #C2571A 40%, transparent); }
+.thanksgiving-theme .focus\:ring-pb-palm:focus { --tw-ring-color: #C2571A; }
+.thanksgiving-theme .hover\:bg-pb-cream:hover { background-color: #FBF3E4; }
+.thanksgiving-theme .hover\:bg-pb-mist:hover { background-color: #FDF6EA; }
+.thanksgiving-theme .hover\:bg-pb-ocean\/5:hover { background-color: color-mix(in srgb, #6B3A1F 5%, transparent); }
+.thanksgiving-theme .hover\:bg-pb-palm\/10:hover { background-color: color-mix(in srgb, #C2571A 10%, transparent); }
+.thanksgiving-theme .hover\:bg-pb-sand\/40:hover { background-color: color-mix(in srgb, #E9D3A8 40%, transparent); }
+.thanksgiving-theme .hover\:text-pb-ink:hover { color: #4A2E1B; }
+.thanksgiving-theme .text-pb-driftwood { color: #8A5A2B; }
+.thanksgiving-theme .text-pb-ink { color: #4A2E1B; }
+.thanksgiving-theme .text-pb-ocean { color: #6B3A1F; }
+.thanksgiving-theme .text-pb-palm { color: #C2571A; }
+.thanksgiving-theme .text-pb-grape { color: #8C2F1C; }
+.thanksgiving-theme .bg-pb-grape\/10 { background-color: color-mix(in srgb, #8C2F1C 10%, transparent); }
+
+.thanksgiving-theme .surface-card {
+  background: rgba(251, 243, 228, 0.9);
+  border-color: rgba(194, 87, 26, 0.22);
+  box-shadow: 0 18px 38px rgba(107, 58, 31, 0.12);
+}
+
+.thanksgiving-theme .input-field {
+  background: rgba(255, 250, 241, 0.95);
+  border-color: rgba(138, 90, 43, 0.3);
+  color: #4A2E1B;
+}
+
+.thanksgiving-theme .input-field:focus {
+  outline: 2px solid rgba(194, 87, 26, 0.25);
+  border-color: #C2571A;
+}
+
+.thanksgiving-theme input[type="checkbox"] { accent-color: #C2571A; }
