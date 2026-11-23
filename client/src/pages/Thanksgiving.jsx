@@ -13,6 +13,8 @@ import "./thanksgiving-theme.css";
 import { BILLS_LOGO_URL, CHIEFS_LOGO_URL } from "../config/thanksgivingGame.js";
 
 const EVENT_SLUG = "thanksgiving";
+// The page always shows at least this many people coming, filling the gap with an "And N more" row
+const MIN_SHOWN_HEADCOUNT = 5;
 // Classic dishes guests can claim. A dish drops off the list once someone RSVPs with it.
 const THANKSGIVING_DISHES = [
   "Turkey",
@@ -140,6 +142,26 @@ const GameMatchup = () => (
   </div>
 );
 
+/**
+ * Closing row of the guest list for people who are coming but not listed.
+ * @param {object} props - Component props.
+ * @param {number} props.count - How many more people to mention.
+ * @param {boolean} props.hasListedGuests - Whether any guests are listed above this row.
+ * @returns {JSX.Element} Avatar stack with "And N more".
+ */
+const MoreGuestsRow = ({ count, hasListedGuests }) => (
+  <div className={`flex items-center gap-4 px-5 py-4 ${hasListedGuests ? "border-t border-pb-driftwood/10" : ""}`}>
+    <div aria-hidden="true" className="flex w-11 shrink-0 -space-x-3">
+      {FALL_AVATAR_COLORS.slice(0, Math.min(count, 3)).map((color) => (
+        <span className="h-7 w-7 rounded-full ring-2 ring-[#FBF3E4]" key={color} style={{ backgroundColor: color }} />
+      ))}
+    </div>
+    <p className="font-medium text-pb-ocean">
+      {hasListedGuests ? `And ${count} more` : `${count} ${count === 1 ? "neighbor" : "neighbors"} coming`}
+    </p>
+  </div>
+);
+
 const ThanksgivingHero = ({ cancelled, headcount = 0, headcountLoading = false }) => {
   return (
     <section
@@ -203,9 +225,7 @@ const ThanksgivingHero = ({ cancelled, headcount = 0, headcountLoading = false }
         ) : null}
         {!cancelled && !headcountLoading ? (
           <p className="mt-2.5 text-xs font-medium" style={{ color: FALL.bark }}>
-            {headcount > 0
-              ? `${headcount} ${headcount === 1 ? "neighbor" : "neighbors"} coming so far`
-              : "Be the first to claim a seat at the table"}
+            {`${headcount} neighbors coming so far`}
           </p>
         ) : null}
       </div>
@@ -294,6 +314,8 @@ const Thanksgiving = () => {
   const cancelled = eventData?.event?.cancelled ?? false;
   const rsvps = eventData?.rsvps ?? [];
   const headcount = rsvps.reduce((total, rsvp) => total + (rsvp.guestCount || 1), 0);
+  const shownHeadcount = Math.max(MIN_SHOWN_HEADCOUNT, headcount);
+  const unlistedGuests = shownHeadcount - headcount;
   const unclaimedDishes = getUnclaimedDishes(rsvps);
   // True only on the first load; later refreshes keep showing the current list
   const isFirstLoad = isLoading && !eventData;
@@ -301,7 +323,7 @@ const Thanksgiving = () => {
   if (adminMode.isAdmin && !adminMode.isAuthenticated) {
     return (
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
-        <ThanksgivingHero cancelled={cancelled} headcount={headcount} headcountLoading={isFirstLoad} />
+        <ThanksgivingHero cancelled={cancelled} headcount={shownHeadcount} headcountLoading={isFirstLoad} />
         <div className="mx-auto w-full max-w-md">
           <AdminPasswordGate onAuthenticated={adminMode.handleAuthenticated} />
         </div>
@@ -329,7 +351,7 @@ const Thanksgiving = () => {
           </div>
         )}
 
-        <ThanksgivingHero cancelled={cancelled} headcount={headcount} headcountLoading={isFirstLoad} />
+        <ThanksgivingHero cancelled={cancelled} headcount={shownHeadcount} headcountLoading={isFirstLoad} />
 
         {cancelled && (
           <section className="rounded-lg border border-pb-error/30 bg-pb-error/5 px-5 py-5 text-center">
@@ -350,9 +372,6 @@ const Thanksgiving = () => {
 
             {errorMessage ? <p className="px-5 py-4 text-sm text-pb-error">{errorMessage}</p> : null}
 
-            {!isLoading && !errorMessage && rsvps.length === 0 ? (
-              <p className="px-5 py-4 text-sm text-pb-driftwood">No one has RSVP'd yet. Claim the first seat at the table.</p>
-            ) : null}
 
             {(() => {
               const avatarColors = assignAvatarColors(rsvps, FALL_AVATAR_COLORS);
@@ -373,6 +392,10 @@ const Thanksgiving = () => {
                 );
               });
             })()}
+
+            {!isFirstLoad && !errorMessage && unlistedGuests > 0 ? (
+              <MoreGuestsRow count={unlistedGuests} hasListedGuests={rsvps.length > 0} />
+            ) : null}
           </div>
 
           <div className="min-w-0 space-y-4">
