@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 
 import { Footer } from "./components/Footer.jsx";
 import { Header } from "./components/Header.jsx";
+import { ThanksgivingPageSkeleton } from "./components/ThanksgivingSkeleton.jsx";
 import Home from "./pages/Home.jsx";
 
 const AboutPage = lazy(() => import("./pages/About.jsx"));
@@ -38,7 +39,14 @@ const App = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/set-password" element={<SetPasswordPage />} />
           <Route path="/share" element={<SharePage />} />
-          <Route path="/thanksgiving" element={<ThanksgivingPage />} />
+          <Route
+            path="/thanksgiving"
+            element={
+              <Suspense fallback={<ThanksgivingPageSkeleton />}>
+                <ThanksgivingPage />
+              </Suspense>
+            }
+          />
           <Route path="/upload" element={<UploadPage />} />
         </Routes>
       </Suspense>

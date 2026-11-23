@@ -5,6 +5,7 @@ import AdminPasswordGate from "../components/AdminPasswordGate.jsx";
 import { EditRSVPModal } from "../components/EditRSVPModal.jsx";
 import { RSVPCard } from "../components/RSVPCard.jsx";
 import { RSVPFormUnified } from "../components/RSVPFormUnified.jsx";
+import { RsvpListSkeleton, SkeletonBlock } from "../components/ThanksgivingSkeleton.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useAdminMode } from "../hooks/useAdminMode.js";
 import { assignAvatarColors } from "./Home.jsx";
@@ -139,7 +140,7 @@ const GameMatchup = () => (
   </div>
 );
 
-const ThanksgivingHero = ({ cancelled, headcount = 0 }) => {
+const ThanksgivingHero = ({ cancelled, headcount = 0, headcountLoading = false }) => {
   return (
     <section
       className="relative overflow-hidden rounded-[1.25rem] border shadow-xl"
@@ -195,7 +196,12 @@ const ThanksgivingHero = ({ cancelled, headcount = 0 }) => {
             RSVP for Thanksgiving
           </a>
         ) : null}
-        {!cancelled ? (
+        {!cancelled && headcountLoading ? (
+          <div className="mt-3 flex justify-center">
+            <SkeletonBlock className="h-3 w-40" />
+          </div>
+        ) : null}
+        {!cancelled && !headcountLoading ? (
           <p className="mt-2.5 text-xs font-medium" style={{ color: FALL.bark }}>
             {headcount > 0
               ? `${headcount} ${headcount === 1 ? "neighbor" : "neighbors"} coming so far`
@@ -289,11 +295,13 @@ const Thanksgiving = () => {
   const rsvps = eventData?.rsvps ?? [];
   const headcount = rsvps.reduce((total, rsvp) => total + (rsvp.guestCount || 1), 0);
   const unclaimedDishes = getUnclaimedDishes(rsvps);
+  // True only on the first load; later refreshes keep showing the current list
+  const isFirstLoad = isLoading && !eventData;
 
   if (adminMode.isAdmin && !adminMode.isAuthenticated) {
     return (
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
-        <ThanksgivingHero cancelled={cancelled} headcount={headcount} />
+        <ThanksgivingHero cancelled={cancelled} headcount={headcount} headcountLoading={isFirstLoad} />
         <div className="mx-auto w-full max-w-md">
           <AdminPasswordGate onAuthenticated={adminMode.handleAuthenticated} />
         </div>
@@ -321,7 +329,7 @@ const Thanksgiving = () => {
           </div>
         )}
 
-        <ThanksgivingHero cancelled={cancelled} headcount={headcount} />
+        <ThanksgivingHero cancelled={cancelled} headcount={headcount} headcountLoading={isFirstLoad} />
 
         {cancelled && (
           <section className="rounded-lg border border-pb-error/30 bg-pb-error/5 px-5 py-5 text-center">
@@ -338,9 +346,7 @@ const Thanksgiving = () => {
               </h2>
             </div>
 
-            {isLoading && !eventData ? (
-              <p className="px-5 py-4 text-sm text-pb-driftwood">Loading RSVP list...</p>
-            ) : null}
+            {isFirstLoad ? <RsvpListSkeleton /> : null}
 
             {errorMessage ? <p className="px-5 py-4 text-sm text-pb-error">{errorMessage}</p> : null}
 
@@ -374,6 +380,7 @@ const Thanksgiving = () => {
               cancelled={cancelled}
               eventSlug={EVENT_SLUG}
               foodCategories={unclaimedDishes}
+              foodCategoriesLoading={isFirstLoad}
               foodPlaceholder="Pick a dish below or type your own"
               onSubmit={handleSubmit}
               scrollFoodChips
