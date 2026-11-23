@@ -8,9 +8,12 @@ import { RSVPFormUnified } from "../components/RSVPFormUnified.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useAdminMode } from "../hooks/useAdminMode.js";
 import { assignAvatarColors } from "./Home.jsx";
+import "./thanksgiving-theme.css";
 
 const EVENT_SLUG = "thanksgiving";
 const FOOD_CATEGORIES = ["Main", "Side", "Dessert", "Drinks"];
+// Fall avatar tints for guests without a profile photo
+const FALL_AVATAR_COLORS = ["#C2571A", "#8C2F1C", "#D9A441", "#6B3A1F", "#A67C3D", "#B5381F", "#7A5C2E", "#E07B39"];
 const DIRECTIONS_URL =
   "https://www.google.com/maps/dir/?api=1&destination=4262+Ingraham+St,+San+Diego,+CA+92109";
 
@@ -169,6 +172,16 @@ const Thanksgiving = () => {
     loadEvent();
   }, [loadEvent]);
 
+  // Theme the whole page (header, cards, form, footer) while this route is open
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.body.classList.add("thanksgiving-theme");
+    return () => {
+      document.body.classList.remove("thanksgiving-theme");
+      document.title = previousTitle === "Thanksgiving on Ingraham" ? "BBQ On Ingraham" : previousTitle;
+    };
+  }, []);
+
   const handleSubmit = async (body) => {
     const response = await apiClient.createRsvp(body);
     await loadEvent();
@@ -289,7 +302,7 @@ const Thanksgiving = () => {
             ) : null}
 
             {(() => {
-              const avatarColors = assignAvatarColors(rsvps);
+              const avatarColors = assignAvatarColors(rsvps, FALL_AVATAR_COLORS);
               return rsvps.map((rsvp, index) => {
                 const isOwner = Boolean(isAuthenticated && user?.id && rsvp.userId === user.id);
 

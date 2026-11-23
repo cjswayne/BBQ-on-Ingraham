@@ -39,17 +39,17 @@ const hashNameToIndex = (name = "") => {
 };
 
 // Assign colors so no two adjacent RSVPs share the same color
-export const assignAvatarColors = (rsvps = []) => {
+export const assignAvatarColors = (rsvps = [], palette = AVATAR_COLORS) => {
   const colors = [];
   for (let i = 0; i < rsvps.length; i++) {
-    let idx = hashNameToIndex(rsvps[i].attendeeName);
+    let idx = hashNameToIndex(rsvps[i].attendeeName) % palette.length;
     // Shift forward until we find a color that differs from the previous
     let attempts = 0;
-    while (attempts < AVATAR_COLORS.length && i > 0 && AVATAR_COLORS[idx] === colors[i - 1]) {
-      idx = (idx + 1) % AVATAR_COLORS.length;
+    while (attempts < palette.length && i > 0 && palette[idx] === colors[i - 1]) {
+      idx = (idx + 1) % palette.length;
       attempts++;
     }
-    colors.push(AVATAR_COLORS[idx]);
+    colors.push(palette[idx]);
   }
   return colors;
 };
