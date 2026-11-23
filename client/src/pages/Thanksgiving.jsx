@@ -59,10 +59,13 @@ const FALL = {
 
 // Simple maple leaf used as decoration in the hero
 const Leaf = ({ className = "", color = FALL.pumpkin, style }) => (
-  <svg aria-hidden="true" className={className} style={style} viewBox="0 0 24 24">
+  <svg aria-hidden="true" className={className} style={style} viewBox="0 0 100 100">
     <path
-      d="M12 2l1.6 3.6 2.9-1.1-.6 3.4 3.6-.4-1.9 2.9 3.4 1.6-3.6 1.4 1.2 3.2-3.5-.9-.6 3.3-2.5-2.4V22h-.8v-5.4l-2.5 2.4-.6-3.3-3.5.9 1.2-3.2L2.6 12l3.4-1.6-1.9-2.9 3.6.4-.6-3.4 2.9 1.1z"
+      d="M50 4L57 19L65 15L63 33L78 24L76 33L92 32L84 44L94 50L74 60L78 70L58 64L53 76L52 76L52 96L48 96L48 76L47 76L42 64L22 70L26 60L6 50L16 44L8 32L24 33L22 24L37 33L35 15L43 19Z"
       fill={color}
+      stroke={color}
+      strokeLinejoin="round"
+      strokeWidth="3"
     />
   </svg>
 );
@@ -112,7 +115,7 @@ const BILLS_LOGO_URL = "https://duckduckgo.com/assets/sports/nfl/Bills.svg";
  */
 const GameMatchup = () => (
   <div
-    className="mx-auto mt-5 max-w-sm rounded-2xl border px-4 py-4"
+    className="mx-auto mt-4 max-w-sm rounded-2xl border px-4 py-3"
     style={{ backgroundColor: "rgba(255, 250, 241, 0.75)", borderColor: `${FALL.pumpkin}33` }}
   >
     <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em]" style={{ color: FALL.pumpkin }}>
@@ -137,7 +140,7 @@ const GameMatchup = () => (
   </div>
 );
 
-const ThanksgivingHero = ({ cancelled }) => {
+const ThanksgivingHero = ({ cancelled, headcount = 0 }) => {
   return (
     <section
       className="relative overflow-hidden rounded-[1.25rem] border shadow-xl"
@@ -150,7 +153,7 @@ const ThanksgivingHero = ({ cancelled }) => {
       <Leaf className="pointer-events-none absolute -bottom-8 -left-6 h-28 w-28 opacity-20" color={FALL.gold} style={{ transform: "rotate(-24deg)" }} />
       <Leaf className="pointer-events-none absolute right-16 bottom-6 h-10 w-10 opacity-30" color={FALL.pumpkin} style={{ transform: "rotate(40deg)" }} />
 
-      <div className="relative px-6 py-8 text-center sm:px-10 sm:py-10">
+      <div className="relative px-6 py-6 text-center sm:px-10 sm:py-10">
         <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: FALL.pumpkin }}>
           A special holiday potluck
         </p>
@@ -158,13 +161,12 @@ const ThanksgivingHero = ({ cancelled }) => {
           Thanksgiving on Ingraham
         </h1>
         <p className="mx-auto mt-2 max-w-xl text-sm leading-6 sm:text-base" style={{ color: FALL.bark }}>
-          Gather round for a neighborhood Thanksgiving feast, then stick around to watch the
-          Chiefs take on the Bills together. Bring a dish to share and pull up a chair.
+          A neighborhood Thanksgiving feast, then the big game together.
         </p>
 
         <GameMatchup />
 
-        <div className="mx-auto mt-6 flex max-w-sm flex-col gap-3.5 text-sm">
+        <div className="mx-auto mt-5 flex max-w-sm flex-col gap-3 text-sm">
           <InfoRow icon={<CalendarIcon />} title="Thursday, November 26">
             <p className="mt-1 text-xs opacity-75" style={{ color: FALL.bark }}>
               Starts at 5pm
@@ -187,12 +189,19 @@ const ThanksgivingHero = ({ cancelled }) => {
 
         {!cancelled ? (
           <a
-            className="mx-auto mt-6 flex max-w-sm items-center justify-center gap-2 rounded-full px-4 py-3.5 text-sm font-medium text-white shadow transition hover:brightness-110"
+            className="mx-auto mt-5 flex max-w-sm items-center justify-center gap-2 rounded-full px-4 py-3.5 text-sm font-medium text-white shadow transition hover:brightness-110"
             href="#rsvp"
             style={{ backgroundColor: FALL.pumpkin }}
           >
             RSVP for Thanksgiving
           </a>
+        ) : null}
+        {!cancelled ? (
+          <p className="mt-2.5 text-xs font-medium" style={{ color: FALL.bark }}>
+            {headcount > 0
+              ? `${headcount} ${headcount === 1 ? "neighbor" : "neighbors"} coming so far`
+              : "Be the first to claim a seat at the table"}
+          </p>
         ) : null}
       </div>
     </section>
@@ -285,7 +294,7 @@ const Thanksgiving = () => {
   if (adminMode.isAdmin && !adminMode.isAuthenticated) {
     return (
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
-        <ThanksgivingHero cancelled={cancelled} />
+        <ThanksgivingHero cancelled={cancelled} headcount={headcount} />
         <div className="mx-auto w-full max-w-md">
           <AdminPasswordGate onAuthenticated={adminMode.handleAuthenticated} />
         </div>
@@ -313,7 +322,7 @@ const Thanksgiving = () => {
           </div>
         )}
 
-        <ThanksgivingHero cancelled={cancelled} />
+        <ThanksgivingHero cancelled={cancelled} headcount={headcount} />
 
         {cancelled && (
           <section className="rounded-lg border border-pb-error/30 bg-pb-error/5 px-5 py-5 text-center">
@@ -321,23 +330,6 @@ const Thanksgiving = () => {
             <p className="mt-2 text-lg font-medium text-pb-ocean">Thanksgiving on Ingraham is not happening this year.</p>
           </section>
         )}
-
-        <section className="surface-card overflow-hidden">
-          <div className="grid gap-4 px-5 py-5 sm:grid-cols-2 sm:px-8">
-            <div>
-              <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-pb-driftwood">When</h2>
-              <p className="mt-2 text-lg font-medium" style={{ color: FALL.cranberry }}>
-                Thursday, November 26 at 5pm
-              </p>
-            </div>
-            <div>
-              <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-pb-driftwood">People coming</h2>
-              <p className="mt-2 text-lg font-medium" style={{ color: FALL.cranberry }}>
-                {headcount} {headcount === 1 ? "neighbor" : "neighbors"} at the table
-              </p>
-            </div>
-          </div>
-        </section>
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="surface-card min-w-0 overflow-hidden">
