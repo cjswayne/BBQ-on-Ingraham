@@ -11,7 +11,38 @@ import { assignAvatarColors } from "./Home.jsx";
 import "./thanksgiving-theme.css";
 
 const EVENT_SLUG = "thanksgiving";
-const FOOD_CATEGORIES = ["Main", "Side", "Dessert", "Drinks"];
+// Classic dishes guests can claim. A dish drops off the list once someone RSVPs with it.
+const THANKSGIVING_DISHES = [
+  "Turkey",
+  "Ham",
+  "Stuffing",
+  "Mashed potatoes",
+  "Gravy",
+  "Cranberry sauce",
+  "Green bean casserole",
+  "Sweet potato casserole",
+  "Mac and cheese",
+  "Dinner rolls",
+  "Corn",
+  "Salad",
+  "Deviled eggs",
+  "Pumpkin pie",
+  "Apple pie",
+  "Pecan pie",
+  "Game day snacks",
+  "Wine",
+  "Apple cider"
+];
+
+/**
+ * Lists the dishes nobody has claimed yet.
+ * @param {Array<{ food?: string }>} rsvps - Current RSVPs for the event.
+ * @returns {string[]} Unclaimed dishes, in list order.
+ */
+const getUnclaimedDishes = (rsvps = []) => {
+  const claimed = new Set(rsvps.map((rsvp) => String(rsvp.food || "").trim().toLowerCase()).filter(Boolean));
+  return THANKSGIVING_DISHES.filter((dish) => !claimed.has(dish.toLowerCase()));
+};
 // Fall avatar tints for guests without a profile photo
 const FALL_AVATAR_COLORS = ["#C2571A", "#8C2F1C", "#D9A441", "#6B3A1F", "#A67C3D", "#B5381F", "#7A5C2E", "#E07B39"];
 const DIRECTIONS_URL =
@@ -225,6 +256,7 @@ const Thanksgiving = () => {
   const cancelled = eventData?.event?.cancelled ?? false;
   const rsvps = eventData?.rsvps ?? [];
   const headcount = rsvps.reduce((total, rsvp) => total + (rsvp.guestCount || 1), 0);
+  const unclaimedDishes = getUnclaimedDishes(rsvps);
 
   if (adminMode.isAdmin && !adminMode.isAuthenticated) {
     return (
@@ -326,8 +358,8 @@ const Thanksgiving = () => {
             <RSVPFormUnified
               cancelled={cancelled}
               eventSlug={EVENT_SLUG}
-              foodCategories={FOOD_CATEGORIES}
-              foodPlaceholder="What dish are you bringing? (stuffing, pie, green beans...)"
+              foodCategories={unclaimedDishes}
+              foodPlaceholder="Pick a dish below or type your own"
               onSubmit={handleSubmit}
               submitLabel="RSVP for Thanksgiving"
             />
