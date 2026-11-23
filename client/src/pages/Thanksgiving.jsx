@@ -97,17 +97,44 @@ const PinIcon = () => (
   </svg>
 );
 
-const TvIcon = () => (
-  <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <path d="M3 9a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2l0 -9z" />
-    <path d="M16 3l-4 4l-4 -4" />
-  </svg>
-);
-
 const DishIcon = () => (
   <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
     <path d="M19 3v12h-5c-.023 -3.681 .184 -7.406 5 -12zm0 12v6h-1v-3m-10 -14v17m-3 -17v3a3 3 0 1 0 6 0v-3" />
   </svg>
+);
+
+const CHIEFS_LOGO_URL = "https://duckduckgo.com/assets/sports/nfl/Chiefs.svg";
+const BILLS_LOGO_URL = "https://duckduckgo.com/assets/sports/nfl/Bills.svg";
+
+/**
+ * Chiefs v Bills callout for the watch party.
+ * @returns {JSX.Element} Team logos with a "v" between them and the kickoff details.
+ */
+const GameMatchup = () => (
+  <div
+    className="mx-auto mt-5 max-w-sm rounded-2xl border px-4 py-4"
+    style={{ backgroundColor: "rgba(255, 250, 241, 0.75)", borderColor: `${FALL.pumpkin}33` }}
+  >
+    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em]" style={{ color: FALL.pumpkin }}>
+      Watch party
+    </p>
+    <div className="mt-2 flex items-center justify-center gap-5">
+      <div className="flex w-20 flex-col items-center gap-1">
+        <img alt="Kansas City Chiefs logo" className="h-14 w-14 object-contain" src={CHIEFS_LOGO_URL} />
+        <span className="text-xs font-semibold" style={{ color: FALL.bark }}>Chiefs</span>
+      </div>
+      <span className="text-2xl font-bold italic" style={{ color: FALL.cranberry }}>
+        v
+      </span>
+      <div className="flex w-20 flex-col items-center gap-1">
+        <img alt="Buffalo Bills logo" className="h-14 w-14 object-contain" src={BILLS_LOGO_URL} />
+        <span className="text-xs font-semibold" style={{ color: FALL.bark }}>Bills</span>
+      </div>
+    </div>
+    <p className="mt-2 text-xs" style={{ color: FALL.bark }}>
+      Kickoff 5:20pm on NBC. Wear your red and gold!
+    </p>
+  </div>
 );
 
 const ThanksgivingHero = ({ cancelled }) => {
@@ -135,15 +162,12 @@ const ThanksgivingHero = ({ cancelled }) => {
           Chiefs take on the Bills together. Bring a dish to share and pull up a chair.
         </p>
 
+        <GameMatchup />
+
         <div className="mx-auto mt-6 flex max-w-sm flex-col gap-3.5 text-sm">
           <InfoRow icon={<CalendarIcon />} title="Thursday, November 26">
             <p className="mt-1 text-xs opacity-75" style={{ color: FALL.bark }}>
               Starts at 5pm
-            </p>
-          </InfoRow>
-          <InfoRow icon={<TvIcon />} title="Chiefs vs. Bills watch party">
-            <p className="mt-1 text-xs opacity-75" style={{ color: FALL.bark }}>
-              Kickoff 5:20pm on NBC. Wear your red and gold!
             </p>
           </InfoRow>
           <InfoRow icon={<PinIcon />} title="4262 Ingraham St">
