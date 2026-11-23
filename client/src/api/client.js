@@ -120,6 +120,7 @@ export const apiClient = {
     }),
   getCurrentUser: () => request("/api/auth/me"),
   getNextEvent: () => request("/api/events/next"),
+  getSpecialEvent: (slug) => request(`/api/events/special/${encodeURIComponent(slug)}`),
   createRsvp: (body) =>
     request("/api/rsvps", {
       method: "POST",

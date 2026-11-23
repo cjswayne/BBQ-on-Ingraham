@@ -8,7 +8,8 @@ import { Event } from "../models/Event.js";
 import { RSVP } from "../models/RSVP.js";
 import { ThemePollOption } from "../models/ThemePollOption.js";
 import { createHttpError } from "../middleware/errorHandler.js";
-import { getNextMonday } from "../utils/dateUtils.js";
+import { getSpecialEventConfig } from "../config/specialEvents.js";
+import { getNextMonday, getPacificMidnightUtcDate } from "../utils/dateUtils.js";
 import { logger } from "../utils/logger.js";
 
 const router = Router();
@@ -52,6 +53,32 @@ const getOrCreateNextEvent = async () => {
   );
 };
 
+// Finds or creates the Event document for a one-off event (e.g. Thanksgiving).
+// Returns null when the slug is not a configured special event.
+const getOrCreateSpecialEvent = async (slug) => {
+  const config = getSpecialEventConfig(slug);
+
+  if (!config) {
+    return null;
+  }
+
+  const eventDate = getPacificMidnightUtcDate(config.year, config.month, config.day);
+
+  return Event.findOneAndUpdate(
+    { slug: config.slug },
+    {
+      $setOnInsert: {
+        slug: config.slug,
+        date: eventDate,
+        title: config.title,
+        theme: config.title,
+        themePollActive: false
+      }
+    },
+    { returnDocument: "after", upsert: true }
+  );
+};
+
 const serializeEventPayload = async (event) => {
   const [rsvps, pollOptions] = await Promise.all([
     RSVP.find({ eventId: event._id, cancelledAt: null })
@@ -66,7 +93,9 @@ const serializeEventPayload = async (event) => {
       date: event.date,
       theme: event.theme,
       themePollActive: event.themePollActive,
-      cancelled: event.cancelled ?? false
+      cancelled: event.cancelled ?? false,
+      slug: event.slug || null,
+      title: event.title || ""
     },
     rsvps: rsvps.map((rsvp) => ({
       id: rsvp._id.toString(),
@@ -96,6 +125,26 @@ router.get("/next", async (_request, response, next) => {
     response.status(200).json(payload);
   } catch (error) {
     logger.error("Failed to fetch next event", error);
+    next(error);
+  }
+});
+
+router.get("/special/:slug", async (request, response, next) => {
+  try {
+    const event = await getOrCreateSpecialEvent(request.params.slug);
+
+    if (!event) {
+      next(createHttpError(404, "Event not found"));
+      return;
+    }
+
+    const payload = await serializeEventPayload(event);
+    const config = getSpecialEventConfig(request.params.slug);
+
+    payload.event.timeLabel = config.timeLabel;
+    response.status(200).json(payload);
+  } catch (error) {
+    logger.error("Failed to fetch special event", error);
     next(error);
   }
 });
@@ -198,5 +247,5 @@ router.post(
   }
 );
 
-export { getOrCreateNextEvent, serializeEventPayload };
+export { getOrCreateNextEvent, getOrCreateSpecialEvent, serializeEventPayload };
 export default router;

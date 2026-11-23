@@ -12,6 +12,7 @@ const GalleryPage = lazy(() => import("./pages/Gallery.jsx"));
 const ProfilePage = lazy(() => import("./pages/Profile.jsx"));
 const SetPasswordPage = lazy(() => import("./pages/SetPassword.jsx"));
 const SharePage = lazy(() => import("./pages/Share.jsx"));
+const ThanksgivingPage = lazy(() => import("./pages/Thanksgiving.jsx"));
 const UploadPage = lazy(() => import("./pages/Upload.jsx"));
 
 const PageFallback = () => {
@@ -37,6 +38,7 @@ const App = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/set-password" element={<SetPasswordPage />} />
           <Route path="/share" element={<SharePage />} />
+          <Route path="/thanksgiving" element={<ThanksgivingPage />} />
           <Route path="/upload" element={<UploadPage />} />
         </Routes>
       </Suspense>
