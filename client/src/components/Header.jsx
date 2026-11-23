@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 
 import logo from "../assets/bbqoningraham-logo.png";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -35,6 +35,8 @@ export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const rafRef = useRef(null);
   const { user, isAuthenticated } = useAuth();
+  const { pathname } = useLocation();
+  const siteTitle = pathname.startsWith("/thanksgiving") ? "Thanksgiving on Ingraham" : "BBQ On Ingraham";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -87,7 +89,7 @@ export const Header = () => {
               src={logo}
             />
           )}
-          <h1 className="text-lg font-semibold tracking-tight">BBQ On Ingraham</h1>
+          <h1 className="text-lg font-semibold tracking-tight">{siteTitle}</h1>
         </Link>
 
         {/* <button

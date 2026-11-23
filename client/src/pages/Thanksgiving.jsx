@@ -63,6 +63,13 @@ const PinIcon = () => (
   </svg>
 );
 
+const TvIcon = () => (
+  <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path d="M3 9a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2l0 -9z" />
+    <path d="M16 3l-4 4l-4 -4" />
+  </svg>
+);
+
 const DishIcon = () => (
   <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
     <path d="M19 3v12h-5c-.023 -3.681 .184 -7.406 5 -12zm0 12v6h-1v-3m-10 -14v17m-3 -17v3a3 3 0 1 0 6 0v-3" />
@@ -90,14 +97,19 @@ const ThanksgivingHero = ({ cancelled }) => {
           Thanksgiving on Ingraham
         </h1>
         <p className="mx-auto mt-2 max-w-xl text-sm leading-6 sm:text-base" style={{ color: FALL.bark }}>
-          Gather round for a neighborhood Thanksgiving feast. Bring a dish to share and
-          pull up a chair.
+          Gather round for a neighborhood Thanksgiving feast, then stick around to watch the
+          Chiefs take on the Bills together. Bring a dish to share and pull up a chair.
         </p>
 
         <div className="mx-auto mt-6 flex max-w-sm flex-col gap-3.5 text-sm">
-          <InfoRow icon={<CalendarIcon />} title="Wednesday, November 26">
+          <InfoRow icon={<CalendarIcon />} title="Thursday, November 26">
             <p className="mt-1 text-xs opacity-75" style={{ color: FALL.bark }}>
               Starts at 5pm
+            </p>
+          </InfoRow>
+          <InfoRow icon={<TvIcon />} title="Chiefs vs. Bills watch party">
+            <p className="mt-1 text-xs opacity-75" style={{ color: FALL.bark }}>
+              Kickoff 5:20pm on NBC. Wear your red and gold!
             </p>
           </InfoRow>
           <InfoRow icon={<PinIcon />} title="4262 Ingraham St">
@@ -246,7 +258,7 @@ const Thanksgiving = () => {
             <div>
               <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-pb-driftwood">When</h2>
               <p className="mt-2 text-lg font-medium" style={{ color: FALL.cranberry }}>
-                Wednesday, November 26 at 5pm
+                Thursday, November 26 at 5pm
               </p>
             </div>
             <div>

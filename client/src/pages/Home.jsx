@@ -412,7 +412,7 @@ const Home = () => {
                 Special event
               </p>
               <p className="mt-1 text-base font-semibold" style={{ color: "#8C2F1C" }}>
-                Thanksgiving on Ingraham, Wed Nov 26 at 5pm
+                Thanksgiving on Ingraham, Thu Nov 26 at 5pm, plus the Chiefs game
               </p>
             </div>
             <span className="shrink-0 rounded-full px-4 py-2 text-sm font-medium text-white" style={{ backgroundColor: "#C2571A" }}>
