@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useAdminMode } from "../hooks/useAdminMode.js";
 import { assignAvatarColors } from "./Home.jsx";
 import "./thanksgiving-theme.css";
+import { BILLS_LOGO_URL, CHIEFS_LOGO_URL } from "../config/thanksgivingGame.js";
 
 const EVENT_SLUG = "thanksgiving";
 // Classic dishes guests can claim. A dish drops off the list once someone RSVPs with it.
@@ -106,8 +107,6 @@ const DishIcon = () => (
   </svg>
 );
 
-const CHIEFS_LOGO_URL = "https://duckduckgo.com/assets/sports/nfl/Chiefs.svg";
-const BILLS_LOGO_URL = "https://duckduckgo.com/assets/sports/nfl/Bills.svg";
 
 /**
  * Chiefs v Bills callout for the watch party.
