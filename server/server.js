@@ -4,6 +4,7 @@ import compression from "compression";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -15,6 +16,7 @@ import mediaRouter from "./routes/media.js";
 import rsvpRouter from "./routes/rsvp.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { startThemeScheduler } from "./services/themeScheduler.js";
+import { applySpecialEventShell, getSpecialEventShell } from "./utils/specialEventShell.js";
 import { logger } from "./utils/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -78,6 +80,17 @@ app.use((req, res, next) => {
   }
 
   res.setHeader("Cache-Control", "no-cache");
+
+  const shell = getSpecialEventShell(req.path);
+  if (shell) {
+    fs.readFile(path.join(clientDistPath, "index.html"), "utf8")
+      .then((html) => {
+        res.type("html").send(applySpecialEventShell(html, shell));
+      })
+      .catch(next);
+    return;
+  }
+
   res.sendFile(path.join(clientDistPath, "index.html"));
 });
 
