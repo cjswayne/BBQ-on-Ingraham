@@ -98,6 +98,7 @@ const getNameInitial = (name) => {
  * @param {boolean} props.cancelled - Indicates whether RSVP is closed.
  * @param {(body: object) => Promise<object|void>} props.onSubmit - Submit handler provided by parent component.
  * @param {string} props.eventDate - Optional event date to include in the payload.
+ * @param {boolean} props.scrollFoodChips - Shows the dish choices on one line that scrolls sideways.
  * @returns {JSX.Element} RSVP form content.
  */
 export const RSVPFormUnified = ({
@@ -107,6 +108,7 @@ export const RSVPFormUnified = ({
   eventSlug,
   foodCategories = FOOD_CATEGORIES,
   foodPlaceholder = "Describe what you're bringing (not beer)...",
+  scrollFoodChips = false,
   submitLabel = "RSVP"
 }) => {
   const { storedEmail, storedPhone, isAuthenticated, login } = useAuth();
@@ -534,10 +536,16 @@ export const RSVPFormUnified = ({
             value={formState.foodCustom}
           />
         ) : null}
-        <div className="flex flex-wrap gap-1.5">
+        <div
+          className={
+            scrollFoodChips
+              ? "-mx-1 flex snap-x gap-1.5 overflow-x-auto px-1 pb-2 [scrollbar-width:thin]"
+              : "flex flex-wrap gap-1.5"
+          }
+        >
           {foodCategories.map((category) => (
             <button
-              className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+              className={`${scrollFoodChips ? "shrink-0 snap-start whitespace-nowrap " : ""}rounded-full px-3 py-1 text-xs font-medium transition ${
                 formState.foodCategory === category
                   ? "bg-pb-palm text-white"
                   : "border border-pb-driftwood/30 text-pb-ink hover:bg-pb-cream"

@@ -315,8 +315,8 @@ const Thanksgiving = () => {
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="surface-card overflow-hidden">
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="surface-card min-w-0 overflow-hidden">
             <div className="border-b border-pb-driftwood/10 px-5 py-4">
               <h2 className="text-xl font-semibold" style={{ color: FALL.cranberry }}>
                 Who is coming
@@ -354,13 +354,14 @@ const Thanksgiving = () => {
             })()}
           </div>
 
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <RSVPFormUnified
               cancelled={cancelled}
               eventSlug={EVENT_SLUG}
               foodCategories={unclaimedDishes}
               foodPlaceholder="Pick a dish below or type your own"
               onSubmit={handleSubmit}
+              scrollFoodChips
               submitLabel="RSVP for Thanksgiving"
             />
           </div>
